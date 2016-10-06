@@ -11,6 +11,7 @@
 #include "copyright.h"
 #include "utility.h"
 #include "thread.h"
+#include "taskManager.h"
 #include "scheduler.h"
 #include "interrupt.h"
 #include "stats.h"
@@ -28,6 +29,7 @@ extern Scheduler *scheduler;			// the ready list
 extern Interrupt *interrupt;			// interrupt status
 extern Statistics *stats;			// performance metrics
 extern Timer *timer;				// the hardware alarm clock
+extern taskManager *taskmanager;
 
 #ifdef USER_PROGRAM
 #include "machine.h"

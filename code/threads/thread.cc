@@ -23,6 +23,7 @@
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
 					// stack overflows
+char* status_char[4] = {"JUST_CREATED","RUNNING", "READY", "BLOCKED"};
 
 //----------------------------------------------------------------------
 // Thread::Thread
@@ -32,9 +33,11 @@
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-Thread::Thread(char* threadName)
+Thread::Thread(char* threadName, int Tid, int Uid)
 {
     name = threadName;
+    tid = Tid;
+    uid = Uid;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -318,3 +321,9 @@ Thread::RestoreUserState()
 	machine->WriteRegister(i, userRegisters[i]);
 }
 #endif
+
+char* 
+Thread::getStatus() 
+{
+    return status_char[status]; 
+}

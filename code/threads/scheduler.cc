@@ -21,7 +21,6 @@
 #include "copyright.h"
 #include "scheduler.h"
 #include "system.h"
-
 //----------------------------------------------------------------------
 // Scheduler::Scheduler
 // 	Initialize the list of ready but not running threads to empty.
@@ -122,7 +121,7 @@ Scheduler::Run (Thread *nextThread)
     // before now (for example, in Thread::Finish()), because up to this
     // point, we were still running on the old thread's stack!
     if (threadToBeDestroyed != NULL) {
-        delete threadToBeDestroyed;
+        taskmanager->deleteThread(threadToBeDestroyed);
 	threadToBeDestroyed = NULL;
     }
     
@@ -142,6 +141,6 @@ Scheduler::Run (Thread *nextThread)
 void
 Scheduler::Print()
 {
-    printf("Ready list contents:\n");
+    printf("------------Other threads------------\n");
     readyList->Mapcar((VoidFunctionPtr) ThreadPrint);
 }

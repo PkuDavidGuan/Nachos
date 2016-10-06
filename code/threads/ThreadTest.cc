@@ -13,7 +13,7 @@
 #include "system.h"
 
 // testnum is set in main.cc
-int testnum = 1;
+int testnum = 2;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -29,9 +29,9 @@ SimpleThread(int which)
 {
     int num;
     
-    for (num = 0; num < 5; num++) {
+    for (num = 0; num < 3; num++) {
 	printf("*** thread %d looped %d times\n", which, num);
-        currentThread->Yield();
+            currentThread->Yield();
     }
 }
 
@@ -46,12 +46,31 @@ ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
 
-    Thread *t = new Thread("forked thread");
+    Thread *t = taskmanager->createThread("forked thread");
 
     t->Fork(SimpleThread, 1);
     SimpleThread(0);
 }
+void
+TS(int none)
+{
+    taskmanager->printThread();
+}
+void
+ThreadTest2()
+{
+    Thread *t1 = taskmanager->createThread("Alice");
+    t1->Fork(SimpleThread, 1);
 
+    Thread *t2 = taskmanager->createThread("David");
+    t2->Fork(SimpleThread, 2);
+
+    Thread *t3 = taskmanager->createThread("Carol");
+    t3->Fork(SimpleThread, 3);
+
+    Thread *t4 = taskmanager->createThread("print task");
+    t4->Fork(TS, 0);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -64,6 +83,8 @@ ThreadTest()
     case 1:
 	ThreadTest1();
 	break;
+    case 2:
+    ThreadTest2();
     default:
 	printf("No test specified.\n");
 	break;

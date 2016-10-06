@@ -18,6 +18,7 @@
 
 #include "copyright.h"
 #include "post.h"
+#include "system.h"
 #ifdef HOST_SPARC
 #include <strings.h>
 #endif
@@ -191,7 +192,7 @@ PostOffice::PostOffice(NetworkAddress addr, double reliability, int nBoxes)
 
 // Finally, create a thread whose sole job is to wait for incoming messages,
 //   and put them in the right mailbox. 
-    Thread *t = new Thread("postal worker");
+    Thread *t = taskmanager->createThread("postal worker");
 
     t->Fork(PostalHelper, (int) this);
 }

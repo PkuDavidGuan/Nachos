@@ -79,9 +79,8 @@ class Thread {
     // THEY MUST be in this position for SWITCH to work.
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
-
   public:
-    Thread(char* debugName);		// initialize a Thread 
+    Thread(char* threadName, int Tid, int Uid);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
 					// must not be running when delete 
@@ -99,8 +98,10 @@ class Thread {
     void CheckOverflow();   			// Check if thread has 
 						// overflowed its stack
     void setStatus(ThreadStatus st) { status = st; }
+    char* getStatus();
     char* getName() { return (name); }
-    void Print() { printf("%s, ", name); }
+    int getTid() { return tid; }
+    void Print() { printf("%s       %d       %d       %s\n", name, tid, uid, getStatus()); }
 
   private:
     // some of the private data for this class is listed above
@@ -110,7 +111,8 @@ class Thread {
 					// (If NULL, don't deallocate stack)
     ThreadStatus status;		// ready, running or blocked
     char* name;
-
+    int tid;                  //thread id
+    int uid;                  //user id
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
