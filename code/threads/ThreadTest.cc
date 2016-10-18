@@ -13,7 +13,7 @@
 #include "system.h"
 
 // testnum is set in main.cc
-int testnum = 3;
+int testnum = 4;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -56,6 +56,9 @@ TS(int none)
 {
     taskmanager->printThread();
 }
+//----------------------------------------------------------------------
+//implement the TS function
+//----------------------------------------------------------------------
 void
 ThreadTest2()
 {
@@ -101,6 +104,24 @@ void ThreadTest3()
     Thread *t3 = taskmanager->createThread("Carol",1);
     t3->Fork(printC, 3);
 }
+
+void simulateTime(int when)
+{
+    for(int i = 0; i < when; ++i)
+    {
+        interrupt->OneTick();
+    }
+}
+//----------------------------------------------------------------------
+//implement the time-slice dispatch
+//----------------------------------------------------------------------
+void ThreadTest4()
+{
+    Thread *t1 = taskmanager->createThread("foo",1);
+    t1->Fork(simulateTime, 50);
+    Thread *t2 = taskmanager->createThread("bar",1);
+    t2->Fork(simulateTime, 50);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -115,8 +136,13 @@ ThreadTest()
 	break;
     case 2:
     ThreadTest2();
+    break;
     case 3:
     ThreadTest3();
+    break;
+    case 4:
+    ThreadTest4();
+    break;
     default:
 	printf("No test specified.\n");
 	break;
