@@ -155,6 +155,8 @@ Thread::Finish ()
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
     
+    if(threadToBeDestroyed != NULL)                   //fix the delete bug
+        taskmanager->deleteThread(threadToBeDestroyed);
     threadToBeDestroyed = currentThread;
     Sleep();					// invokes SWITCH
     // not reached
