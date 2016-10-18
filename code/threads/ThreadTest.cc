@@ -13,7 +13,7 @@
 #include "system.h"
 
 // testnum is set in main.cc
-int testnum = 2;
+int testnum = 3;
 
 //----------------------------------------------------------------------
 // SimpleThread
@@ -46,7 +46,7 @@ ThreadTest1()
 {
     DEBUG('t', "Entering ThreadTest1");
 
-    Thread *t = taskmanager->createThread("forked thread");
+    Thread *t = taskmanager->createThread("forked thread", 1);
 
     t->Fork(SimpleThread, 1);
     SimpleThread(0);
@@ -59,17 +59,47 @@ TS(int none)
 void
 ThreadTest2()
 {
-    Thread *t1 = taskmanager->createThread("Alice");
+    Thread *t1 = taskmanager->createThread("Alice",1);
     t1->Fork(SimpleThread, 1);
 
-    Thread *t2 = taskmanager->createThread("David");
+    Thread *t2 = taskmanager->createThread("David",2);
     t2->Fork(SimpleThread, 2);
 
-    Thread *t3 = taskmanager->createThread("Carol");
+    Thread *t3 = taskmanager->createThread("Carol",3);
     t3->Fork(SimpleThread, 3);
 
-    Thread *t4 = taskmanager->createThread("print task");
+    Thread *t4 = taskmanager->createThread("print task",4);
     t4->Fork(TS, 0);
+}
+
+void printA(int none)
+{
+    for(int i = 0; i < 10; ++i)
+        printf("A is RUNNING\n");
+}
+void printB(int none)
+{
+    for(int j = 0; j < 10; ++j)
+        printf("B is RUNNING\n");
+}
+void printC(int none)
+{
+        printf("C is RUNNING\n");
+}
+
+//----------------------------------------------------------------------
+//Test HPF
+//----------------------------------------------------------------------
+void ThreadTest3()
+{
+    Thread *t1 = taskmanager->createThread("Alice",3);
+    t1->Fork(printA, 1);
+
+    Thread *t2 = taskmanager->createThread("David",2);
+    t2->Fork(printB, 2);
+
+    Thread *t3 = taskmanager->createThread("Carol",1);
+    t3->Fork(printC, 3);
 }
 //----------------------------------------------------------------------
 // ThreadTest
@@ -85,6 +115,8 @@ ThreadTest()
 	break;
     case 2:
     ThreadTest2();
+    case 3:
+    ThreadTest3();
     default:
 	printf("No test specified.\n");
 	break;

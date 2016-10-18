@@ -14,7 +14,7 @@ private:
 public:
 	taskManager();
 	//~taskManager();
-	Thread* createThread(char* name, int Uid=0);
+	Thread* createThread(char* name, int pri, int Uid=0);
 	void deleteThread(Thread* target);
 	int newTid();
 	void printThread();

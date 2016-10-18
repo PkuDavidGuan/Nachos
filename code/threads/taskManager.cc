@@ -9,13 +9,18 @@ taskManager::taskManager()
 }
 
 Thread*
-taskManager::createThread(char* name, int Uid)
+taskManager::createThread(char* name, int pri, int Uid)
 {
+	Thread* ans = NULL;
+
 	int num = newTid();
 	if(num != -1)
-		return (new Thread(name, num, Uid));
-	else
-		return NULL;
+		ans = new Thread(name, num, Uid, pri);
+	
+	/*if(ans != NULL && ans->getPri() > currentThread->getPri()) //Highest priotiry first
+		currentThread->Yield();*/
+
+	return ans;
 }
 
 void

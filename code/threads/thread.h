@@ -80,7 +80,7 @@ class Thread {
     int* stackTop;			 // the current stack pointer
     int machineState[MachineStateSize];  // all registers except for stackTop
   public:
-    Thread(char* threadName, int Tid, int Uid);		// initialize a Thread 
+    Thread(char* threadName, int Tid, int Uid, int pri);		// initialize a Thread 
     ~Thread(); 				// deallocate a Thread
 					// NOTE -- thread being deleted
 					// must not be running when delete 
@@ -101,6 +101,7 @@ class Thread {
     char* getStatus();
     char* getName() { return (name); }
     int getTid() { return tid; }
+    int getPri() { return priority; }
     void Print() { printf("%s       %d       %d       %s\n", name, tid, uid, getStatus()); }
 
   private:
@@ -113,6 +114,7 @@ class Thread {
     char* name;
     int tid;                  //thread id
     int uid;                  //user id
+    int priority;
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()

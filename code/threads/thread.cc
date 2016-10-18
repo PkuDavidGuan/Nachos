@@ -33,11 +33,12 @@ char* status_char[4] = {"JUST_CREATED","RUNNING", "READY", "BLOCKED"};
 //	"threadName" is an arbitrary string, useful for debugging.
 //----------------------------------------------------------------------
 
-Thread::Thread(char* threadName, int Tid, int Uid)
+Thread::Thread(char* threadName, int Tid, int Uid, int pri)
 {
     name = threadName;
     tid = Tid;
     uid = Uid;
+    priority = pri;
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;
@@ -99,6 +100,9 @@ Thread::Fork(VoidFunctionPtr func, int arg)
     scheduler->ReadyToRun(this);	// ReadyToRun assumes that interrupts 
 					// are disabled!
     (void) interrupt->SetLevel(oldLevel);
+
+    if(priority > currentThread->getPri()) //Highest priotiry first
+        currentThread->Yield();
 }    
 
 //----------------------------------------------------------------------

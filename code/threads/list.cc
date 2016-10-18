@@ -76,8 +76,7 @@ List::~List()
 void
 List::Append(void *item)
 {
-    ListElement *element = new ListElement(item, 0);
-
+    ListElement *element = new ListElement(item, 0);       
     if (IsEmpty()) {		// list is empty
 	first = element;
 	last = element;
