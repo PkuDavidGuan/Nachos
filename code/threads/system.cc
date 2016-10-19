@@ -59,10 +59,12 @@ extern void Cleanup();
 //		whether it needs it or not.
 //----------------------------------------------------------------------
 static void
-TimerInterruptHandler(int dummy)
+TimerInterruptHandler(int dummy)               
 {
     if (interrupt->getStatus() != IdleMode)
-	interrupt->YieldOnReturn();
+    {
+	   interrupt->YieldOnReturn();
+    }
 }
 
 //----------------------------------------------------------------------

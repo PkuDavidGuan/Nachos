@@ -101,8 +101,8 @@ Thread::Fork(VoidFunctionPtr func, int arg)
 					// are disabled!
     (void) interrupt->SetLevel(oldLevel);
 
-    if(priority > currentThread->getPri()) //Highest priotiry first
-        currentThread->Yield();
+    /*if(priority > currentThread->getPri()) //Highest priotiry first
+        currentThread->Yield();*/
 }    
 
 //----------------------------------------------------------------------
