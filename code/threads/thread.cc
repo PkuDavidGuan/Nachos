@@ -39,6 +39,8 @@ Thread::Thread(char* threadName, int Tid, int Uid, int pri)
     tid = Tid;
     uid = Uid;
     priority = pri;
+    usedTime = 1;
+
     stackTop = NULL;
     stack = NULL;
     status = JUST_CREATED;

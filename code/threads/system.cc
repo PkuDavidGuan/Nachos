@@ -63,7 +63,14 @@ TimerInterruptHandler(int dummy)
 {
     if (interrupt->getStatus() != IdleMode)
     {
-	   interrupt->YieldOnReturn();
+        if(currentThread->getUsedTime() < (1 << (currentThread->getPri())))
+            currentThread->addUsedTime(); //Time used by the thread is less than the set-time
+        else//The thread has used the set-time and should go to the next queue
+        {
+            currentThread->clearUsedTime();
+            currentThread->decreasePri();
+            interrupt->YieldOnReturn();
+        }
     }
 }
 
@@ -145,7 +152,7 @@ Initialize(int argc, char **argv)
     // We didn't explicitly allocate the current thread we are running in.
     // But if it ever tries to give up the CPU, we better have a Thread
     // object to save its state. 
-    currentThread = taskmanager->createThread("main",129);		
+    currentThread = taskmanager->createThread("main",1);		
     currentThread->setStatus(RUNNING);
 
     interrupt->Enable();

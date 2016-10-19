@@ -102,6 +102,10 @@ class Thread {
     char* getName() { return (name); }
     int getTid() { return tid; }
     int getPri() { return priority; }
+    void decreasePri() { if(priority < 3) priority++; }    //only used in multileval feedback queue
+    int getUsedTime() { return usedTime; }
+    void addUsedTime() { usedTime++; }
+    void clearUsedTime() { usedTime = 1; }
     void Print() { printf("%s       %d       %d       %s\n", name, tid, uid, getStatus()); }
 
   private:
@@ -115,6 +119,7 @@ class Thread {
     int tid;                  //thread id
     int uid;                  //user id
     int priority;
+    int usedTime;             //the time have been used
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()

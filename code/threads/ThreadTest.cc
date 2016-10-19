@@ -113,15 +113,16 @@ void simulateTime(int when)
     }
 }
 //----------------------------------------------------------------------
-//implement the time-slice dispatch
+//implement the time-slice and multileval feedback queue dispatch
 //----------------------------------------------------------------------
 void ThreadTest4()
 {
     Thread *t1 = taskmanager->createThread("foo",1);
-    t1->Fork(simulateTime, 50);
+    t1->Fork(simulateTime, 100);
     Thread *t2 = taskmanager->createThread("bar",1);
-    t2->Fork(simulateTime, 50);
+    t2->Fork(simulateTime, 100);
 }
+
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
