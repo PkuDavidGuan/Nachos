@@ -11,6 +11,7 @@
 
 #include "copyright.h"
 #include "system.h"
+#include "synch.h"
 
 // testnum is set in main.cc
 int testnum = 4;
@@ -123,6 +124,56 @@ void ThreadTest4()
     t2->Fork(simulateTime, 100);
 }
 
+int buffer = 0;
+Semaphore* empty = new Semaphore("empty",5);
+Semaphore* full = new Semaphore("full", 0);
+Semaphore* Mutex = new Semaphore("mutex", 1);
+void  Produce(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        empty->P();
+        Mutex->P();
+        buffer++;
+        printf("%s produced an item into the buffer, %d left.\n", 
+            currentThread->getName(), buffer);
+        Mutex->V();
+        full->V();
+        
+    }
+}
+void Consume(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        full->P();
+        Mutex->P();
+        buffer--;
+        printf("%s consumed an item from the buffer, %d left.\n", 
+            currentThread->getName(), buffer);
+        Mutex->V();
+        empty->V();
+        
+    }
+}
+//----------------------------------------------------------------------
+//Test producer-consumer problem(using semaphore)
+//----------------------------------------------------------------------
+void ThreadTest5()
+{
+    Thread *t1 = taskmanager->createThread("consumer1", 1);
+    t1->Fork(Consume, 3);
+    Thread *t2 = taskmanager->createThread("producer1", 1);
+    t2->Fork(Produce, 3);
+    Thread *t3 = taskmanager->createThread("producer2", 1);
+    t3->Fork(Produce, 3);
+    Thread *t4 = taskmanager->createThread("producer3",1);
+    t4->Fork(Produce, 3);
+    Thread *t5 = taskmanager->createThread("consumer2",1);
+    t5->Fork(Consume, 3);
+    Thread *t6 = taskmanager->createThread("consumer3",1);
+    t6->Fork(Consume, 3);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -143,6 +194,9 @@ ThreadTest()
     break;
     case 4:
     ThreadTest4();
+    break;
+    case 5:
+    ThreadTest5();
     break;
     default:
 	printf("No test specified.\n");

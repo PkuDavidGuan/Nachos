@@ -194,10 +194,10 @@ Thread::Yield ()
     
     nextThread = scheduler->FindNextToRun();
     if (nextThread != NULL) {
-    printf("totalTicks: %d, idleTicks: %d, systemTicks: %d, userTicks: %d\n",
+    /*printf("totalTicks: %d, idleTicks: %d, systemTicks: %d, userTicks: %d\n",
         stats->totalTicks, stats->idleTicks, stats->systemTicks, stats->userTicks);
     printf("Thread %s yielded, thread %s is running\n",this->getName(), nextThread->getName());
-    printf("-----------------------------------------------------------------------\n");
+    printf("-----------------------------------------------------------------------\n");*/
 	scheduler->ReadyToRun(this);
 	scheduler->Run(nextThread);
     }
