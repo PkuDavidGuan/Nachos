@@ -124,7 +124,7 @@ void Lock::Acquire()
 
 void Lock::Release()
 {
-    ASSERT(!isHeldByCurrentThread());
+    ASSERT(isHeldByCurrentThread());
     ownerThread = NULL;
     lock->V();
 }

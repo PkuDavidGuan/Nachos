@@ -174,6 +174,72 @@ void ThreadTest5()
     Thread *t6 = taskmanager->createThread("consumer3",1);
     t6->Fork(Consume, 3);
 }
+
+int reading = 0;
+int writing = 0;
+Condition* rok = new Condition("read ok");
+Condition* wok = new Condition("write ok");
+Lock* MUTEX = new Lock("mutex");
+void reader(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        MUTEX->Acquire();
+        reading++;
+        if(writing > 0)
+            rok->Wait(MUTEX);
+        rok->Signal(MUTEX);
+        MUTEX->Release();
+
+        printf("%s is reading.\n", currentThread->getName());
+
+        MUTEX->Acquire();
+        reading--;
+        if(reading == 0)
+            wok->Signal(MUTEX);
+        MUTEX->Release();
+    }
+}
+void writer(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        MUTEX->Acquire();
+        if(writing > 0 || reading > 0)
+            wok->Signal(MUTEX);
+        writing++;
+        MUTEX->Release();
+
+        printf("%s is writing.\n", currentThread->getName());
+
+        MUTEX->Acquire();
+        writing--;
+        if(reading > 0)
+            rok->Signal(MUTEX);
+        else
+            wok->Signal(MUTEX);
+        MUTEX->Release();
+    }
+}
+//----------------------------------------------------------------
+//Test the first type of reader-writer problem(using lock 
+//and condition variable)
+//----------------------------------------------------------------
+void ThreadTest6()
+{
+    Thread *t1 = taskmanager->createThread("reader1", 1);
+    t1->Fork(reader, 3);
+    Thread *t2 = taskmanager->createThread("writer1", 1);
+    t2->Fork(writer, 3);
+    Thread *t3 = taskmanager->createThread("reader2", 1);
+    t3->Fork(reader, 3);
+    Thread *t4 = taskmanager->createThread("reader3",1);
+    t4->Fork(reader, 3);
+    Thread *t5 = taskmanager->createThread("writer2",1);
+    t5->Fork(writer, 3);
+    Thread *t6 = taskmanager->createThread("writer3",1);
+    t6->Fork(writer, 3);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -197,6 +263,9 @@ ThreadTest()
     break;
     case 5:
     ThreadTest5();
+    break;
+    case 6:
+    ThreadTest6();
     break;
     default:
 	printf("No test specified.\n");
