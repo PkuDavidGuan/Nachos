@@ -240,6 +240,32 @@ void ThreadTest6()
     Thread *t6 = taskmanager->createThread("writer3",1);
     t6->Fork(writer, 3);
 }
+
+Semaphore* barrier = new Semaphore("barrier", -2);
+void Barrier(int none)
+{
+    barrier->P();
+    printf("barrier is broken.\n");
+}
+void branch(int n)
+{
+    barrier->V();
+    printf("branch %d is ready.\n", n);
+}
+//----------------------------------------------------------------
+//A simple implementation of the barrier(using semaphore)
+//----------------------------------------------------------------
+void ThreadTest7()
+{
+    Thread* t1 = taskmanager->createThread("Barrier", 1);
+    t1->Fork(Barrier, 0);
+    Thread* t2 = taskmanager->createThread("branch1", 1);
+    t2->Fork(branch, 1);
+    Thread* t3 = taskmanager->createThread("branch2", 1);
+    t3->Fork(branch, 2);
+    Thread* t4 = taskmanager->createThread("branch3", 1);
+    t4->Fork(branch, 3);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -266,6 +292,9 @@ ThreadTest()
     break;
     case 6:
     ThreadTest6();
+    break;
+    case 7:
+    ThreadTest7();
     break;
     default:
 	printf("No test specified.\n");

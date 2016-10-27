@@ -66,7 +66,7 @@ Semaphore::P()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);	// disable interrupts
     
-    while (value == 0) { 			// semaphore not available
+    while (value <= 0) { 			// semaphore not available
 	queue->Append((void *)currentThread);	// so go to sleep
 	currentThread->Sleep();
     } 
@@ -162,17 +162,22 @@ void Condition::Wait(Lock* conditionLock)
     //ASSERT(!isHeldByCurrentThread());
 }
 
-void Condition::Signal(Lock* conditionLock) 
+int Condition::Signal(Lock* conditionLock) 
 {
+    int ret = false;
     IntStatus oldLevel = interrupt->SetLevel(IntOff);   // disable interrupts
 
     ASSERT(conditionLock->isHeldByCurrentThread());
     
     Thread* ToRun = (Thread *)waitingList->Remove();
     if(ToRun != NULL)
+    {
         scheduler->ReadyToRun(ToRun);
+        ret = true;
+    }
 
     (void) interrupt->SetLevel(oldLevel);   // re-enable interrupts 
+    return ret;
 }
 
 void Condition::Broadcast(Lock* conditionLock)
