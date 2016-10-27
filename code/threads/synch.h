@@ -134,4 +134,23 @@ class Condition {
     char* name;
     List* waitingList;  // plus some other stuff you'll need to define
 };
+
+//the first kind of read/write lock
+class rwLock {
+public:
+    rwLock(char* debugName);
+    ~rwLock();
+    char* getName() { return (name); }
+
+    void start_r();
+    void finish_r();
+
+    void start_w();
+    void finish_w();
+private:
+    char* name;
+    Semaphore* m;
+    Semaphore* w;
+    int rc;
+};
 #endif // SYNCH_H

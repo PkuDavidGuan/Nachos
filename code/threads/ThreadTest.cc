@@ -266,6 +266,48 @@ void ThreadTest7()
     Thread* t4 = taskmanager->createThread("branch3", 1);
     t4->Fork(branch, 3);
 }
+
+rwLock* rw = new rwLock("test");
+void RWreader(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        rw->start_r();
+
+        printf("%s is reading.\n", currentThread->getName());
+
+        rw->finish_r();
+    }
+}
+void RWwriter(int count)
+{
+    for(int i = 0; i < count; ++i)
+    {
+        rw->start_w();
+
+        printf("%s is writing.\n", currentThread->getName());
+
+        rw->finish_w();
+    }
+}
+//----------------------------------------------------------------
+//Test the read/write lock
+//----------------------------------------------------------------
+void ThreadTest8()
+{
+    Thread *t1 = taskmanager->createThread("reader1", 1);
+    t1->Fork(RWreader, 1);
+    Thread *t2 = taskmanager->createThread("writer1", 1);
+    t2->Fork(RWwriter, 1);
+    Thread *t3 = taskmanager->createThread("writer2", 1);
+    t3->Fork(RWwriter, 1);
+    Thread *t4 = taskmanager->createThread("reader2",1);
+    t4->Fork(RWreader, 1);
+    Thread *t5 = taskmanager->createThread("reader3",1);
+    t5->Fork(RWreader, 1);
+    Thread *t6 = taskmanager->createThread("writer3",1);
+    t6->Fork(RWwriter, 1);
+}
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.
@@ -295,6 +337,9 @@ ThreadTest()
     break;
     case 7:
     ThreadTest7();
+    break;
+    case 8:
+    ThreadTest8();
     break;
     default:
 	printf("No test specified.\n");

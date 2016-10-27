@@ -192,3 +192,46 @@ void Condition::Broadcast(Lock* conditionLock)
     
     (void) interrupt->SetLevel(oldLevel);   // re-enable interrupts 
 }
+
+
+rwLock::rwLock(char* debugName) 
+{
+    name = debugName;
+    m = new Semaphore("read/write mutex", 1);
+    w = new Semaphore("write is ok", 1);
+    rc = 0;
+}
+
+rwLock::~rwLock() 
+{
+    delete m;
+    delete w;
+}
+
+void rwLock::start_r()
+{
+    m->P();
+    rc++;
+    if(rc == 1)
+        w->P();
+    m->V();
+}
+
+void rwLock::finish_r()
+{
+    m->P();
+    rc--;
+    if(rc == 0)
+        w->V();
+    m->V();
+}
+
+void rwLock::start_w()
+{
+    w->P();
+}
+
+void rwLock::finish_w()
+{
+    w->V();
+}
