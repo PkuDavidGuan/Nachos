@@ -171,7 +171,7 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
  /usr/include/xlocale.h ../threads/thread.h ../threads/taskManager.h \
  ../threads/list.h ../threads/scheduler.h ../machine/interrupt.h \
  ../threads/list.h ../machine/stats.h ../machine/timer.h \
- ../threads/utility.h
+ ../threads/utility.h ../threads/synch.h
 interrupt.o: ../machine/interrupt.cc ../threads/copyright.h \
  ../machine/interrupt.h ../threads/list.h ../threads/copyright.h \
  ../threads/utility.h ../threads/bool.h ../machine/sysdep.h \

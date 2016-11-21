@@ -53,11 +53,65 @@ ExceptionHandler(ExceptionType which)
 {
     int type = machine->ReadRegister(2);
 
-    if ((which == SyscallException) && (type == SC_Halt)) {
-	DEBUG('a', "Shutdown, initiated by user program.\n");
-   	interrupt->Halt();
-    } else {
-	printf("Unexpected user mode exception %d %d\n", which, type);
-	ASSERT(FALSE);
+    if ((which == SyscallException) && (type == SC_Halt)) 
+    {
+		DEBUG('a', "Shutdown, initiated by user program.\n");
+   		interrupt->Halt();
+    }
+    else if(which == PageFaultException)      //pagefault
+    {
+    	int addr = machine->ReadRegister(BadVAddrReg);
+    	unsigned int vpn;
+    	int num = 0;
+    	int temp;
+    	bool freeTLB = false;
+
+    	for(int i = 0; i < TLBSize; ++i)
+    	{
+    		if(machine->tlb[i].valid == false)
+    		{
+    			num = i;
+    			freeTLB = true;
+    			break;
+    		}
+    	}
+
+    	if(freeTLB == false)
+    	{
+	    	/*LFU*/
+	    	temp = 1 << 31;
+	    	for(int i = 0; i < TLBSize; ++i)
+	    	{
+	    		if(temp > machine->tlb[i].frequency)
+	    		{
+	    			temp = machine->tlb[i].frequency;
+	    			num = i;
+	    		}
+	    	}
+
+	    	/*LRU*/
+			// for(int i = 0; i < TLBSize; ++i)
+	  //   	{
+	  //   		if(temp > machine->tlb[i].recent)
+	  //   		{
+	  //   			temp = machine->tlb[i].recent;
+	  //   			num = i;
+	  //   		}
+	  //   	}    	
+        }
+    	vpn = (unsigned)addr / PageSize;
+    	machine->tlb[num].valid = true;
+    	machine->tlb[num].virtualPage = vpn;
+    	machine->tlb[num].physicalPage = machine->pageTable[vpn].physicalPage;
+    	machine->tlb[num].readOnly = machine->pageTable[vpn].readOnly;
+    	machine->tlb[num].use = machine->pageTable[vpn].use;
+    	machine->tlb[num].dirty = machine->pageTable[vpn].dirty;
+    	machine->tlb[num].frequency = 1;
+    	machine->tlb[num].recent = ++(tlbcounter->count);
+    }
+    else 
+    {
+		printf("Unexpected user mode exception %d %d\n", which, type);
+		ASSERT(FALSE);
     }
 }

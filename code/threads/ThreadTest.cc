@@ -125,7 +125,7 @@ void ThreadTest4()
 }
 
 int buffer = 0;
-Semaphore* empty = new Semaphore("empty",5);
+Semaphore* empty = new Semaphore("empty",2);
 Semaphore* full = new Semaphore("full", 0);
 Semaphore* Mutex = new Semaphore("mutex", 1);
 void  Produce(int count)
@@ -241,22 +241,34 @@ void ThreadTest6()
     t6->Fork(writer, 3);
 }
 
-Semaphore* barrier = new Semaphore("barrier", -2);
+bool t[3];
+Condition* barrier = new Condition("Barrier");
 void Barrier(int none)
 {
-    barrier->P();
+    bool con = false;
+    while(!(con = t[0] && t[1] && t[2]))
+        currentThread->Yield();
+    MUTEX->Acquire();
+    barrier->Broadcast(MUTEX);
+    MUTEX->Release();
     printf("barrier is broken.\n");
 }
 void branch(int n)
 {
-    barrier->V();
     printf("branch %d is ready.\n", n);
+    MUTEX->Acquire();
+    t[n-1] = true;
+    barrier->Wait(MUTEX);
+    MUTEX->Release();
+    printf("branch %d went through the barrier.\n", n);
 }
 //----------------------------------------------------------------
-//A simple implementation of the barrier(using semaphore)
+//A simple implementation of the barrier(using condition variable)
 //----------------------------------------------------------------
 void ThreadTest7()
 {
+    for(int i = 0; i < 3; ++i)
+        t[i] = false;
     Thread* t1 = taskmanager->createThread("Barrier", 1);
     t1->Fork(Barrier, 0);
     Thread* t2 = taskmanager->createThread("branch1", 1);
@@ -308,6 +320,7 @@ void ThreadTest8()
     Thread *t6 = taskmanager->createThread("writer3",1);
     t6->Fork(RWwriter, 1);
 }
+
 //----------------------------------------------------------------------
 // ThreadTest
 // 	Invoke a test routine.

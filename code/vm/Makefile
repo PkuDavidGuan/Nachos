@@ -198,7 +198,7 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
  ../userprog/addrspace.h ../filesys/filesys.h ../filesys/openfile.h \
  ../threads/taskManager.h ../threads/list.h ../threads/scheduler.h \
  ../machine/interrupt.h ../threads/list.h ../machine/stats.h \
- ../machine/timer.h
+ ../machine/timer.h ../threads/synch.h
 interrupt.o: ../machine/interrupt.cc ../threads/copyright.h \
  ../machine/interrupt.h ../threads/list.h ../threads/copyright.h \
  ../threads/utility.h ../threads/bool.h ../machine/sysdep.h \

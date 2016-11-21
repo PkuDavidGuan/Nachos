@@ -26,9 +26,11 @@
 // virtual page to one physical page.
 // In addition, there are some extra bits for access control (valid and 
 // read-only) and some bits for usage information (use and dirty).
-
 class TranslationEntry {
-  public:
+  public: 
+    int frequency;           //only used in the tlb mode
+    int recent;              //only used in the tlb mode
+    
     int virtualPage;  	// The page number in virtual memory.
     int physicalPage;  	// The page number in real memory (relative to the
 			//  start of "mainMemory"
@@ -42,4 +44,10 @@ class TranslationEntry {
 			// page is modified.
 };
 
+class TLBcount
+{
+public:
+    int count;
+    TLBcount() { count = 0;}
+};
 #endif

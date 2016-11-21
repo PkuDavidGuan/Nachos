@@ -34,6 +34,7 @@ extern taskManager *taskmanager;
 #ifdef USER_PROGRAM
 #include "machine.h"
 extern Machine* machine;	// user program memory and registers
+extern TLBcount *tlbcounter;
 #endif
 
 #ifdef FILESYS_NEEDED 		// FILESYS or FILESYS_STUB 

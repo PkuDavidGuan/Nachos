@@ -200,7 +200,7 @@ threadtest.o: ../threads/threadtest.cc ../threads/copyright.h \
  ../threads/taskManager.h ../threads/list.h ../threads/scheduler.h \
  ../machine/interrupt.h ../threads/list.h ../machine/stats.h \
  ../machine/timer.h ../filesys/synchdisk.h ../machine/disk.h \
- ../threads/synch.h
+ ../threads/synch.h ../threads/synch.h
 interrupt.o: ../machine/interrupt.cc ../threads/copyright.h \
  ../machine/interrupt.h ../threads/list.h ../threads/copyright.h \
  ../threads/utility.h ../threads/bool.h ../machine/sysdep.h \
