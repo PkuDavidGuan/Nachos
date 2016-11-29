@@ -27,6 +27,7 @@
 #include "utility.h"
 #include "translate.h"
 #include "disk.h"
+#include "../userprog/bitmap.h"
 
 // Definitions related to the size, and format of user memory
 

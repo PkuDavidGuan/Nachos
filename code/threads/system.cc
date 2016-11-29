@@ -31,6 +31,7 @@ SynchDisk   *synchDisk;
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
 Machine *machine;	// user program memory and registers
 TLBcount *tlbcounter;
+BitMap* mymap;
 #endif
 
 #ifdef NETWORK
@@ -162,6 +163,7 @@ Initialize(int argc, char **argv)
 #ifdef USER_PROGRAM
     tlbcounter = new TLBcount;
     machine = new Machine(debugUserProg);	// this must come first
+    mymap = new BitMap(NumPhysPages);
 #endif
 
 #ifdef FILESYS
