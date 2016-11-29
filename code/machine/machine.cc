@@ -65,7 +65,7 @@ Machine::Machine(bool debug)
     tlb = new TranslationEntry[TLBSize];
     for (i = 0; i < TLBSize; i++)
     {
-	   tlb[i].valid = FALSE;
+	   tlb[i].valid = false;
        tlb[i].frequency = 0;
        tlb[i].recent = 0;
     }

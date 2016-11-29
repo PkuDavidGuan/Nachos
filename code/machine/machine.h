@@ -21,6 +21,8 @@
 #ifndef MACHINE_H
 #define MACHINE_H
 
+#define USE_TLB
+
 #include "copyright.h"
 #include "utility.h"
 #include "translate.h"

@@ -48,6 +48,7 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
+int pagefaultnum = 0;
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -58,8 +59,17 @@ ExceptionHandler(ExceptionType which)
 		DEBUG('a', "Shutdown, initiated by user program.\n");
    		interrupt->Halt();
     }
+	else if ((which == SyscallException) && (type == SC_Exit))
+	{
+		printf("Exit num: %d\n", machine->ReadRegister(BadVAddrReg));
+		printf("Page fault num: %d\n", pagefaultnum);
+		interrupt->Halt();
+	}
     else if(which == PageFaultException)      //pagefault
     {
+		pagefaultnum += 1;
+		// if(pagefaultnum == 20)
+		// 	interrupt->Halt();
     	int addr = machine->ReadRegister(BadVAddrReg);
     	unsigned int vpn;
     	int num = 0;
@@ -72,6 +82,7 @@ ExceptionHandler(ExceptionType which)
     		{
     			num = i;
     			freeTLB = true;
+				//printf("Found a void tlb entry: %d\n", i);
     			break;
     		}
     	}
@@ -79,35 +90,39 @@ ExceptionHandler(ExceptionType which)
     	if(freeTLB == false)
     	{
 	    	/*LFU*/
-	    	temp = 1 << 31;
-	    	for(int i = 0; i < TLBSize; ++i)
+	    	// temp = 1 << 30;
+	    	// for(int i = 0; i < TLBSize; ++i)
+	    	// {
+			// 	//printf("tlb %d frequency: %d\n", i, machine->tlb[i].frequency);
+	    	// 	if(temp > machine->tlb[i].frequency)
+	    	// 	{
+	    	// 		temp = machine->tlb[i].frequency;
+	    	// 		num = i;
+	    	// 	}
+			// 	machine->tlb[i].frequency = 0;
+	    	// }
+
+	    	/*LRU*/
+			for(int i = 0; i < TLBSize; ++i)
 	    	{
-	    		if(temp > machine->tlb[i].frequency)
+				//printf("tlb %d recent: %d\n", i, machine->tlb[i].recent);
+	    		if(temp > machine->tlb[i].recent)
 	    		{
-	    			temp = machine->tlb[i].frequency;
+	    			temp = machine->tlb[i].recent;
 	    			num = i;
 	    		}
 	    	}
-
-	    	/*LRU*/
-			// for(int i = 0; i < TLBSize; ++i)
-	  //   	{
-	  //   		if(temp > machine->tlb[i].recent)
-	  //   		{
-	  //   			temp = machine->tlb[i].recent;
-	  //   			num = i;
-	  //   		}
-	  //   	}    	
+	  		//printf("A old tlb entry out: %d\n", num);    	
         }
     	vpn = (unsigned)addr / PageSize;
     	machine->tlb[num].valid = true;
-    	machine->tlb[num].virtualPage = vpn;
+    	machine->tlb[num].virtualPage = machine->pageTable[vpn].virtualPage;
     	machine->tlb[num].physicalPage = machine->pageTable[vpn].physicalPage;
     	machine->tlb[num].readOnly = machine->pageTable[vpn].readOnly;
     	machine->tlb[num].use = machine->pageTable[vpn].use;
     	machine->tlb[num].dirty = machine->pageTable[vpn].dirty;
-    	machine->tlb[num].frequency = 1;
-    	machine->tlb[num].recent = ++(tlbcounter->count);
+    	machine->tlb[num].frequency = 0; //System doesn't use the page until the translate was called again
+    	machine->tlb[num].recent = tlbcounter->count;
     }
     else 
     {

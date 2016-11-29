@@ -9,7 +9,7 @@
 
 #include "syscall.h"
 
-int A[1024];	/* size of physical memory; with code, we'll run out of space!*/
+int A[16];	/* size of physical memory; with code, we'll run out of space!*/
 
 int
 main()
@@ -17,12 +17,12 @@ main()
     int i, j, tmp;
 
     /* first initialize the array, in reverse sorted order */
-    for (i = 0; i < 1024; i++)		
-        A[i] = 1024 - i;
+    for (i = 0; i < 16; i++)		
+        A[i] = 16 - i;
 
     /* then sort! */
-    for (i = 0; i < 1023; i++)
-        for (j = i; j < (1023 - i); j++)
+    for (i = 0; i < 15; i++)
+        for (j = 0; j < (15 - i); j++)
 	   if (A[j] > A[j + 1]) {	/* out of order -> need to swap ! */
 	      tmp = A[j];
 	      A[j] = A[j + 1];
