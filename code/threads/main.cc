@@ -62,7 +62,7 @@ extern int count;
 
 extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
 extern void Print(char *file), PerformanceTest(void);
-extern void StartProcess(char *file), ConsoleTest(char *in, char *out);
+extern void StartProcess(char *file), ConsoleTest(char *in, char *out), DummyStartProcess(int dummy);
 extern void MailTest(int networkID);
 extern void printhello();
 //----------------------------------------------------------------------
@@ -79,6 +79,11 @@ extern void printhello();
 //		ex: "nachos -d +" -> argv = {"nachos", "-d", "+"}
 //----------------------------------------------------------------------
 
+union charToInt
+{
+	char* tmpchar;
+	int tmpint;
+};
 int
 main(int argc, char **argv)
 {
@@ -112,7 +117,14 @@ main(int argc, char **argv)
 #ifdef USER_PROGRAM
         if (!strcmp(*argv, "-x")) {        	// run a user program
 	    ASSERT(argc > 1);
-            StartProcess(*(argv + 1));
+			
+			charToInt abc;
+			abc.tmpchar = *(argv+1);
+			Thread *t1 = taskmanager->createThread("user1",1);
+			Thread *t2 = taskmanager->createThread("user2",1);
+    		t1->Fork(DummyStartProcess, abc.tmpint);
+			t2->Fork(DummyStartProcess, abc.tmpint);
+			//StartProcess(*(argv + 1));
             argCount = 2;
         } else if (!strcmp(*argv, "-c")) {      // test the console
 	    if (argc == 1)

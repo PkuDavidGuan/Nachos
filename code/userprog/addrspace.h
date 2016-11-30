@@ -36,6 +36,7 @@ class AddrSpace {
 					// for now!
     unsigned int numPages;		// Number of pages in the virtual 
 					// address space
+    unsigned char *swapFile;   //simulated swap area
 };
 
 #endif // ADDRSPACE_H

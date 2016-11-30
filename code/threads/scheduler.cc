@@ -98,7 +98,7 @@ Scheduler::Run (Thread *nextThread)
 	currentThread->space->SaveState();
     }
 #endif
-    
+
     oldThread->CheckOverflow();		    // check if the old thread
 					    // had an undetected stack overflow
 

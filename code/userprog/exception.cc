@@ -61,13 +61,16 @@ ExceptionHandler(ExceptionType which)
     }
 	else if ((which == SyscallException) && (type == SC_Exit))
 	{
+		printf("Thread %s exit.\n", currentThread->getName());
 		printf("Exit num: %d\n", machine->ReadRegister(BadVAddrReg));
 		printf("----------------------\n");
 		printf("Page fault num: %d\n", pagefaultnum);
 		printf("----------------------\n");
 		mymap->Print();
 		printf("----------------------\n");
-		interrupt->Halt();
+		//interrupt->Halt();
+		delete currentThread->space;
+		currentThread->Finish();
 	}
     else if(which == PageFaultException)      //pagefault
     {

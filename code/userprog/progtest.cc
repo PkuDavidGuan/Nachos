@@ -43,7 +43,11 @@ StartProcess(char *filename)
 					// the address space exits
 					// by doing the syscall "exit"
 }
-
+void DummyStartProcess(int dummy)
+{
+    char *filename = (char *)dummy;
+    StartProcess(filename);
+}
 // Data structures needed for the console test.  Threads making
 // I/O requests wait on a Semaphore to delay until the I/O completes.
 

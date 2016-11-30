@@ -76,6 +76,8 @@ Machine::Machine(bool debug)
 #endif
 
     singleStep = debug;
+
+    firstTime = true;
     CheckEndian();
 }
 
