@@ -165,7 +165,13 @@ AddrSpace::AddrSpace(OpenFile *executable)
 
 AddrSpace::~AddrSpace()
 {
-   delete pageTable;
+    for (int i = 0; i < numPages; i++) 
+    {
+	    if(pageTable[i].physicalPage != -1)
+            mymap->Clear(pageTable[i].physicalPage);
+    }
+    delete pageTable;
+    delete swapFile;
 }
 
 //----------------------------------------------------------------------
