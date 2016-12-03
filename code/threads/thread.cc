@@ -23,7 +23,7 @@
 #define STACK_FENCEPOST 0xdeadbeef	// this is put at the top of the
 					// execution stack, for detecting 
 					// stack overflows
-char* status_char[4] = {"JUST_CREATED","RUNNING", "READY", "BLOCKED"};
+char* status_char[5] = {"JUST_CREATED","RUNNING", "READY", "BLOCKED", "SUSPEND"};
 
 //----------------------------------------------------------------------
 // Thread::Thread
@@ -331,6 +331,36 @@ Thread::RestoreUserState()
 {
     for (int i = 0; i < NumTotalRegs; i++)
 	machine->WriteRegister(i, userRegisters[i]);
+}
+
+ /*only the currentThread itself can use this function!!!
+    And it can only suspend itself. 
+    */
+void
+Thread::Suspend()
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    
+    status = SUSPEND;
+    for(int i = 0; i < currentThread->space->GetPageNum(); ++i)
+    {
+        machine->pageTable[i].valid = false;
+        if(machine->pageTable[i].physicalPage>=0)
+        {
+            if(machine->pageTable[i].dirty)
+            {
+                memcpy(&(currentThread->space->swapFile[machine->pageTable[i].virtualPage * PageSize]),
+				&(machine->mainMemory[machine->pageTable[i].physicalPage * PageSize]),PageSize);
+            }
+            mymap->Clear(machine->pageTable[i].physicalPage);
+            machine->pageTable[i].physicalPage = -1;
+        }
+    }
+    for(int i = 0; i < TLBSize; ++i)
+    {
+        machine->tlb[i].valid = false;
+    }
+    (void) interrupt->SetLevel(oldLevel);
 }
 #endif
 
