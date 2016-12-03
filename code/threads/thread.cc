@@ -337,7 +337,7 @@ Thread::RestoreUserState()
     And it can only suspend itself. 
     */
 void
-Thread::Suspend()
+Thread::RunSuspend()
 {
     IntStatus oldLevel = interrupt->SetLevel(IntOff);
     
@@ -359,6 +359,32 @@ Thread::Suspend()
     for(int i = 0; i < TLBSize; ++i)
     {
         machine->tlb[i].valid = false;
+    }
+    (void) interrupt->SetLevel(oldLevel);
+    Yield();
+}
+
+/*READY&BLOCKED -> SUSPEND 
+    */
+void
+Thread::RB_Suspend()
+{
+    IntStatus oldLevel = interrupt->SetLevel(IntOff);
+    
+    status = SUSPEND;
+    for(int i = 0; i < currentThread->space->GetPageNum(); ++i)
+    {
+        machine->pageTable[i].valid = false;
+        if(machine->pageTable[i].physicalPage>=0)
+        {
+            if(machine->pageTable[i].dirty)
+            {
+                memcpy(&(currentThread->space->swapFile[machine->pageTable[i].virtualPage * PageSize]),
+				&(machine->mainMemory[machine->pageTable[i].physicalPage * PageSize]),PageSize);
+            }
+            mymap->Clear(machine->pageTable[i].physicalPage);
+            machine->pageTable[i].physicalPage = -1;
+        }
     }
     (void) interrupt->SetLevel(oldLevel);
 }

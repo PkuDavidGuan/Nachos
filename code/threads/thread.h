@@ -134,7 +134,8 @@ class Thread {
   public:
     void SaveUserState();		// save user-level register state
     void RestoreUserState();		// restore user-level register state
-    void Suspend();    //suspend the currentthread
+    void RunSuspend();    //suspend the currentthread
+    void RB_Suspend();    //suspend a ready or blocked thread
 
     AddrSpace *space;			// User code this thread is running.
 #endif
