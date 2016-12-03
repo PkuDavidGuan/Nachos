@@ -91,18 +91,23 @@ AddrSpace::AddrSpace(OpenFile *executable)
     for (i = 0; i < numPages; i++) {
 	pageTable[i].virtualPage = i;	// for now, virtual page # = phys page #
 	
-    temp_phy_num = mymap->Find();
-    ASSERT(temp_phy_num != -1);//for now , I don't handle the pagefault 
+    temp_phy_num = mymap->Find(); 
     pageTable[i].physicalPage = temp_phy_num;
-	pageTable[i].valid = TRUE;
+    if(temp_phy_num >= 0)
+	    pageTable[i].valid = TRUE;
+    else
+        pageTable[i].valid = false;
 	pageTable[i].use = FALSE;
 	pageTable[i].dirty = FALSE;
 	pageTable[i].readOnly = FALSE;  // if the code segment was entirely on 
 					// a separate page, we could set its 
 					// pages to be read-only
+    pageTable[i].frequency = 0;
+    pageTable[i].recent = 0;
+    pageTable[i].buddy = NULL;
     }
 //second, set up a swap area
-    swapFile = new unsigned char[size];
+    swapFile = new char[size];
     for (i = 0; i < size; i++)
       	swapFile[i] = 0; 
 // zero out the entire address space, to zero the unitialized data segment 
@@ -118,8 +123,8 @@ AddrSpace::AddrSpace(OpenFile *executable)
     if (noffH.code.size > 0) {
         DEBUG('a', "Initializing code segment, at 0x%x, size %d\n", 
 			noffH.code.virtualAddr, noffH.code.size);
-        // executable->ReadAt(&(machine->mainMemory[noffH.code.virtualAddr]),
-		// 	noffH.code.size, noffH.code.inFileAddr);
+        executable->ReadAt(&(swapFile[noffH.code.virtualAddr]),
+			noffH.code.size, noffH.code.inFileAddr);
         for(int i = 0; i < noffH.code.size; ++i)
         {
             vpn = (noffH.code.virtualAddr+i) / PageSize;
@@ -129,17 +134,13 @@ AddrSpace::AddrSpace(OpenFile *executable)
                 psyaddr = pageTable[vpn].physicalPage * PageSize + vpo;
                 executable->ReadAt(&(machine->mainMemory[psyaddr]), 1, noffH.code.inFileAddr+i);
             }
-            else
-            {
-                ASSERT(false);
-            }
         }
     }
     if (noffH.initData.size > 0) {
         DEBUG('a', "Initializing data segment, at 0x%x, size %d\n", 
 			noffH.initData.virtualAddr, noffH.initData.size);
-        // executable->ReadAt(&(machine->mainMemory[noffH.initData.virtualAddr]),
-		// 	noffH.initData.size, noffH.initData.inFileAddr);
+        executable->ReadAt(&(swapFile[noffH.initData.virtualAddr]),
+			noffH.initData.size, noffH.initData.inFileAddr);
         for(int i = 0; i < noffH.initData.size; ++i)
         {
             vpn = (noffH.initData.virtualAddr+i) / PageSize;
@@ -148,10 +149,6 @@ AddrSpace::AddrSpace(OpenFile *executable)
             {
                 psyaddr = pageTable[vpn].physicalPage * PageSize + vpo;
                 executable->ReadAt(&(machine->mainMemory[psyaddr]), 1, noffH.initData.inFileAddr+i);
-            }
-            else
-            {
-                ASSERT(false);
             }
         }
     }

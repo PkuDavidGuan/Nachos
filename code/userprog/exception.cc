@@ -48,6 +48,132 @@
 //	are in machine.h.
 //----------------------------------------------------------------------
 
+void tlb_miss(unsigned int vpn)
+{
+    int num = 0;
+    int temp;
+    bool freeTLB = false;
+
+    for(int i = 0; i < TLBSize; ++i)
+	{
+    	if(machine->tlb[i].valid == false)
+    	{
+    		num = i;
+			freeTLB = true;
+				//printf("Found a void tlb entry: %d\n", i);
+    		break;
+    	}
+    }
+
+    if(freeTLB == false)
+    {
+		temp = 1 << 30;
+	    	/*LFU*/
+	    	// temp = 1 << 30;
+	    	// for(int i = 0; i < TLBSize; ++i)
+	    	// {
+			// 	//printf("tlb %d frequency: %d\n", i, machine->tlb[i].frequency);
+	    	// 	if(temp > machine->tlb[i].frequency)
+	    	// 	{
+	    	// 		temp = machine->tlb[i].frequency;
+	    	// 		num = i;
+	    	// 	}
+			// 	machine->tlb[i].frequency = 0;
+	    	// }
+
+	    	/*LRU*/
+		for(int i = 0; i < TLBSize; ++i)
+	    {
+				//printf("tlb %d recent: %d\n", i, machine->tlb[i].recent);
+	    	if(temp > machine->tlb[i].recent)
+	    	{
+	    		temp = machine->tlb[i].recent;
+	    		num = i;
+	    	}
+	    }
+	  		//printf("A old tlb entry out: %d\n", num);    	
+    }
+    machine->tlb[num].valid = true;
+    machine->tlb[num].virtualPage = machine->pageTable[vpn].virtualPage;
+    machine->tlb[num].physicalPage = machine->pageTable[vpn].physicalPage;
+    machine->tlb[num].readOnly = machine->pageTable[vpn].readOnly;
+    machine->tlb[num].use = machine->pageTable[vpn].use;
+    machine->tlb[num].dirty = machine->pageTable[vpn].dirty;
+	machine->tlb[num].frequency = 0; //System doesn't use the page until the translate was called again
+    machine->tlb[num].recent = tlbcounter->count;
+	machine->tlb[num].buddy = &(machine->pageTable[vpn]);
+}
+
+void LazyLoad(unsigned int vpn)
+{
+	int temp_phy_num = mymap->Find();
+	if(temp_phy_num >= 0)
+	{
+		machine->pageTable[vpn].physicalPage = temp_phy_num;
+	}
+	else
+	{
+		//find a old page
+		int tmp = 1 << 30;
+		int oldpage = 0;
+
+		for(int i = 0; i < currentThread->space->GetPageNum(); ++i)
+		{
+			if(machine->pageTable[i].valid)
+			{
+				ASSERT(machine->pageTable[i].physicalPage>=0);
+				if(tmp > machine->pageTable[i].recent)
+				{
+					tmp = machine->pageTable[i].recent;
+					oldpage = i;
+				}
+			}
+		}
+
+		if(machine->pageTable[oldpage].dirty)
+		{
+			memcpy(&(currentThread->space->swapFile[machine->pageTable[oldpage].virtualPage * PageSize]),
+				&(machine->mainMemory[machine->pageTable[oldpage].physicalPage * PageSize]),PageSize);
+		}
+
+		if(machine->tlb != NULL)
+		{
+			for(int i = 0; i < TLBSize; ++i)
+			{
+				if(machine->tlb[i].valid && machine->tlb[i].virtualPage == machine->pageTable[oldpage].virtualPage)
+				{
+					machine->tlb[i].valid = false;
+					break;
+				}
+			}
+		}
+		machine->pageTable[oldpage].valid = false;
+		machine->pageTable[vpn].physicalPage = machine->pageTable[oldpage].physicalPage;
+		temp_phy_num = machine->pageTable[oldpage].physicalPage;
+	}
+	ASSERT(temp_phy_num >= 0);
+	machine->pageTable[vpn].valid = true;
+	machine->pageTable[vpn].frequency = 0;
+	machine->pageTable[vpn].recent = 0;
+	machine->pageTable[vpn].use = false;
+	machine->pageTable[vpn].dirty = false;
+	machine->pageTable[vpn].readOnly = false;
+
+	if(machine->tlb != NULL)
+	{
+		for(int i = 0; i < TLBSize; ++i)
+		{
+			if(machine->tlb[i].valid && machine->tlb[i].virtualPage == vpn)
+			{
+				machine->tlb[i].physicalPage = temp_phy_num;
+				break;
+			}
+		}
+	}
+
+	memcpy(&(machine->mainMemory[temp_phy_num * PageSize]),
+			&(currentThread->space->swapFile[machine->pageTable[vpn].virtualPage * PageSize]),PageSize);
+}
 int pagefaultnum = 0;
 void
 ExceptionHandler(ExceptionType which)
@@ -68,68 +194,29 @@ ExceptionHandler(ExceptionType which)
 		printf("----------------------\n");
 		mymap->Print();
 		printf("----------------------\n");
+		printf("\n");
 		//interrupt->Halt();
 		delete currentThread->space;
 		currentThread->Finish();
 	}
     else if(which == PageFaultException)      //pagefault
     {
+		unsigned int vpn;
+		int addr = machine->ReadRegister(BadVAddrReg);
+		vpn = (unsigned)addr / PageSize;
+
 		pagefaultnum += 1;
-		// if(pagefaultnum == 20)
-		// 	interrupt->Halt();
-    	int addr = machine->ReadRegister(BadVAddrReg);
-    	unsigned int vpn;
-    	int num = 0;
-    	int temp;
-    	bool freeTLB = false;
 
-    	for(int i = 0; i < TLBSize; ++i)
-    	{
-    		if(machine->tlb[i].valid == false)
-    		{
-    			num = i;
-    			freeTLB = true;
-				//printf("Found a void tlb entry: %d\n", i);
-    			break;
-    		}
-    	}
+    	if(machine->tlb != NULL)
+		{
+			tlb_miss(vpn);
+		}
 
-    	if(freeTLB == false)
-    	{
-	    	/*LFU*/
-	    	// temp = 1 << 30;
-	    	// for(int i = 0; i < TLBSize; ++i)
-	    	// {
-			// 	//printf("tlb %d frequency: %d\n", i, machine->tlb[i].frequency);
-	    	// 	if(temp > machine->tlb[i].frequency)
-	    	// 	{
-	    	// 		temp = machine->tlb[i].frequency;
-	    	// 		num = i;
-	    	// 	}
-			// 	machine->tlb[i].frequency = 0;
-	    	// }
-
-	    	/*LRU*/
-			for(int i = 0; i < TLBSize; ++i)
-	    	{
-				//printf("tlb %d recent: %d\n", i, machine->tlb[i].recent);
-	    		if(temp > machine->tlb[i].recent)
-	    		{
-	    			temp = machine->tlb[i].recent;
-	    			num = i;
-	    		}
-	    	}
-	  		//printf("A old tlb entry out: %d\n", num);    	
-        }
-    	vpn = (unsigned)addr / PageSize;
-    	machine->tlb[num].valid = true;
-    	machine->tlb[num].virtualPage = machine->pageTable[vpn].virtualPage;
-    	machine->tlb[num].physicalPage = machine->pageTable[vpn].physicalPage;
-    	machine->tlb[num].readOnly = machine->pageTable[vpn].readOnly;
-    	machine->tlb[num].use = machine->pageTable[vpn].use;
-    	machine->tlb[num].dirty = machine->pageTable[vpn].dirty;
-    	machine->tlb[num].frequency = 0; //System doesn't use the page until the translate was called again
-    	machine->tlb[num].recent = tlbcounter->count;
+		//the real page fault
+		if(machine->pageTable[vpn].valid == false)
+		{
+			LazyLoad(vpn);
+		}
     }
     else 
     {

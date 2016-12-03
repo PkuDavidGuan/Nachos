@@ -30,13 +30,15 @@ class AddrSpace {
 
     void SaveState();			// Save/restore address space-specific
     void RestoreState();		// info on a context switch 
+    int GetPageNum() { return numPages; }
 
   private:
     TranslationEntry *pageTable;	// Assume linear page table translation
 					// for now!
     unsigned int numPages;		// Number of pages in the virtual 
 					// address space
-    unsigned char *swapFile;   //simulated swap area
+  public:
+    char *swapFile;   //simulated swap area
 };
 
 #endif // ADDRSPACE_H

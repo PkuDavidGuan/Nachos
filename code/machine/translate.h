@@ -28,9 +28,10 @@
 // read-only) and some bits for usage information (use and dirty).
 class TranslationEntry {
   public: 
-    int frequency;           //only used in the tlb mode
-    int recent;              //only used in the tlb mode
-    
+    int frequency;           
+    int recent;              
+    TranslationEntry* buddy; //only used in the tlb mode
+
     int virtualPage;  	// The page number in virtual memory.
     int physicalPage;  	// The page number in real memory (relative to the
 			//  start of "mainMemory"

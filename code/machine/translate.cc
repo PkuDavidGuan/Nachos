@@ -237,7 +237,14 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
 	DEBUG('a', "%d mapped read-only at %d in TLB!\n", virtAddr, i);
 	return ReadOnlyException;
     }
+	
+	// printf("\n");
+	// for(int i = 0; i < TLBSize; ++i)
+	// {
+	// 	printf("%d valid:%d, phy:%d\n", i, machine->tlb[i].valid, machine->tlb[i].physicalPage);
+	// }
     pageFrame = entry->physicalPage;
+	ASSERT(pageFrame != -1);
 
     // if the pageFrame is too big, there is something really wrong! 
     // An invalid translation was loaded into the page table or TLB. 
@@ -250,6 +257,14 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     entry->use = TRUE;		// set the use, dirty bits
     if (writing)
 	entry->dirty = TRUE;
+	if(entry->buddy != NULL) //tlb mode
+	{
+		entry->buddy->frequency = entry->frequency;
+		entry->buddy->recent = entry->recent;
+		entry->buddy->use = true;
+		if(writing)
+			entry->buddy->dirty = true;
+	}
     *physAddr = pageFrame * PageSize + offset;
     ASSERT((*physAddr >= 0) && ((*physAddr + size) <= MemorySize));
     DEBUG('a', "phys addr = 0x%x\n", *physAddr);

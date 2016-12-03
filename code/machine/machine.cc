@@ -68,6 +68,7 @@ Machine::Machine(bool debug)
 	   tlb[i].valid = false;
        tlb[i].frequency = 0;
        tlb[i].recent = 0;
+       tlb[i].buddy = NULL;
     }
     pageTable = NULL;
 #else	// use linear page table
