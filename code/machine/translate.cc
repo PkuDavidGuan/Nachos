@@ -254,6 +254,7 @@ Machine::Translate(int virtAddr, int* physAddr, int size, bool writing)
     }
     entry->frequency++;
     entry->recent = ++(tlbcounter->count);
+	machine->inverseTable[pageFrame].recent = entry->recent;
     entry->use = TRUE;		// set the use, dirty bits
     if (writing)
 	entry->dirty = TRUE;

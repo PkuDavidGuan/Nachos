@@ -61,6 +61,15 @@ Machine::Machine(bool debug)
     mainMemory = new char[MemorySize];
     for (i = 0; i < MemorySize; i++)
       	mainMemory[i] = 0;
+    
+    inverseTable = new InverseEntry[NumPhysPages];
+    for(int i = 0; i < NumPhysPages; ++i)
+    {
+        inverseTable[i].owner = NULL;
+        inverseTable[i].page = NULL;
+        inverseTable[i].vpn = -1;
+        inverseTable[i].recent = 0;
+    }
 #ifdef USE_TLB
     tlb = new TranslationEntry[TLBSize];
     for (i = 0; i < TLBSize; i++)
@@ -92,6 +101,7 @@ Machine::~Machine()
     delete [] mainMemory;
     if (tlb != NULL)
         delete [] tlb;
+    delete [] inverseTable;
 }
 
 //----------------------------------------------------------------------

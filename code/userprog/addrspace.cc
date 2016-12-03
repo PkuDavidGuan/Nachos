@@ -94,7 +94,13 @@ AddrSpace::AddrSpace(OpenFile *executable)
     temp_phy_num = mymap->Find(); 
     pageTable[i].physicalPage = temp_phy_num;
     if(temp_phy_num >= 0)
+    {
 	    pageTable[i].valid = TRUE;
+        machine->inverseTable[temp_phy_num].owner = currentThread;
+        machine->inverseTable[temp_phy_num].vpn = i;
+        machine->inverseTable[temp_phy_num].recent = 0;
+        machine->inverseTable[temp_phy_num].page = &(pageTable[i]);
+    }
     else
         pageTable[i].valid = false;
 	pageTable[i].use = FALSE;
@@ -165,7 +171,13 @@ AddrSpace::~AddrSpace()
     for (int i = 0; i < numPages; i++) 
     {
 	    if(pageTable[i].physicalPage != -1)
+        {
             mymap->Clear(pageTable[i].physicalPage);
+            machine->inverseTable[pageTable[i].physicalPage].owner = NULL;
+            machine->inverseTable[pageTable[i].physicalPage].vpn = -1;
+            machine->inverseTable[pageTable[i].physicalPage].recent = 0;
+            machine->inverseTable[pageTable[i].physicalPage].page = NULL;
+        }
     }
     delete pageTable;
     delete swapFile;

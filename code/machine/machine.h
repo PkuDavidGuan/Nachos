@@ -106,7 +106,14 @@ class Instruction {
 //
 // The procedures in this class are defined in machine.cc, mipssim.cc, and
 // translate.cc.
-
+class InverseEntry
+{
+public:
+	void* owner;
+	void* page;
+	int vpn;
+	int recent;
+};
 class Machine {
   public:
     Machine(bool debug);	// Initialize the simulation of the hardware
@@ -183,6 +190,7 @@ class Machine {
 					// "read-only" to Nachos kernel code
 
     TranslationEntry *pageTable;
+	InverseEntry *inverseTable;
     unsigned int pageTableSize;
 
   private:

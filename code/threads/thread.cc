@@ -353,7 +353,12 @@ Thread::RunSuspend()
 				&(machine->mainMemory[machine->pageTable[i].physicalPage * PageSize]),PageSize);
             }
             mymap->Clear(machine->pageTable[i].physicalPage);
+            machine->inverseTable[machine->pageTable[i].physicalPage].owner = NULL;
+            machine->inverseTable[machine->pageTable[i].physicalPage].vpn = -1;
+            machine->inverseTable[machine->pageTable[i].physicalPage].recent = 0;
+            machine->inverseTable[machine->pageTable[i].physicalPage].page = NULL;
             machine->pageTable[i].physicalPage = -1;
+            
         }
     }
     for(int i = 0; i < TLBSize; ++i)
@@ -383,6 +388,10 @@ Thread::RB_Suspend()
 				&(machine->mainMemory[machine->pageTable[i].physicalPage * PageSize]),PageSize);
             }
             mymap->Clear(machine->pageTable[i].physicalPage);
+            machine->inverseTable[machine->pageTable[i].physicalPage].owner = NULL;
+            machine->inverseTable[machine->pageTable[i].physicalPage].vpn = -1;
+            machine->inverseTable[machine->pageTable[i].physicalPage].recent = 0;
+            machine->inverseTable[machine->pageTable[i].physicalPage].page = NULL;
             machine->pageTable[i].physicalPage = -1;
         }
     }

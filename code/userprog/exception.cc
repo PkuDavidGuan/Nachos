@@ -174,6 +174,67 @@ void LazyLoad(unsigned int vpn)
 	memcpy(&(machine->mainMemory[temp_phy_num * PageSize]),
 			&(currentThread->space->swapFile[machine->pageTable[vpn].virtualPage * PageSize]),PageSize);
 }
+
+void LazyLoad_inverse(int vpn)
+{
+	int temp_phy_num = mymap->Find();
+	if(temp_phy_num == -1)
+	{
+		int tmp = 1 << 30;
+		Thread *replaceThread;
+		TranslationEntry *replacePage;
+		for(int i = 0; i < NumPhysPages; ++i)
+		{
+			if(tmp > machine->inverseTable[i].recent)
+			{
+				tmp = machine->inverseTable[i].recent;
+				temp_phy_num = i;
+			}
+		}
+		replaceThread = (Thread *)(machine->inverseTable[temp_phy_num].owner);
+		replacePage = (TranslationEntry *)(machine->inverseTable[temp_phy_num].page);
+		if(replacePage->dirty)
+		{
+			memcpy(&(replaceThread->space->swapFile[replacePage->virtualPage * PageSize]),
+				&(machine->mainMemory[temp_phy_num * PageSize]),PageSize);
+		}
+		if(replaceThread == currentThread)
+		{
+			for(int i = 0; i < TLBSize; ++i)
+			{
+				if(machine->tlb[i].valid && machine->tlb[i].virtualPage == replacePage->virtualPage)
+				{
+					machine->tlb[i].valid = false;
+				}
+			}
+		}
+		replacePage->valid = false;
+		replacePage->physicalPage = -1;
+	}
+	machine->inverseTable[temp_phy_num].owner = currentThread;
+	machine->inverseTable[temp_phy_num].vpn = vpn;
+	machine->inverseTable[temp_phy_num].recent = 0;
+	machine->inverseTable[temp_phy_num].page = &(machine->pageTable[vpn]);
+
+	machine->pageTable[vpn].valid = true;
+	machine->pageTable[vpn].physicalPage = temp_phy_num;
+	machine->pageTable[vpn].virtualPage = vpn;
+	machine->pageTable[vpn].frequency = 0;
+	machine->pageTable[vpn].recent = 0;
+	machine->pageTable[vpn].use = false;
+	machine->pageTable[vpn].dirty = false;
+	machine->pageTable[vpn].readOnly = false;
+	if(machine->tlb != NULL)
+	{
+		for(int i = 0; i < TLBSize; ++i)
+		{
+			if(machine->tlb[i].valid && machine->tlb[i].virtualPage == vpn)
+				machine->tlb[i].physicalPage = temp_phy_num;
+		}
+	}
+	memcpy(&(machine->mainMemory[temp_phy_num * PageSize]),
+		&(currentThread->space->swapFile[machine->pageTable[vpn].virtualPage * PageSize]),PageSize);
+}
 int pagefaultnum = 0;
 void
 ExceptionHandler(ExceptionType which)
@@ -215,7 +276,8 @@ ExceptionHandler(ExceptionType which)
 		//the real page fault
 		if(machine->pageTable[vpn].valid == false)
 		{
-			LazyLoad(vpn);
+			//LazyLoad(vpn);
+			LazyLoad_inverse((int)vpn);
 		}
     }
     else 
