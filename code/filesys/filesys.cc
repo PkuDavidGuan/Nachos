@@ -83,15 +83,16 @@ FileSystem::FileSystem(bool format)
     if (format) {
         BitMap *freeMap = new BitMap(NumSectors);
         Directory *directory = new Directory(NumDirEntries);
-	FileHeader *mapHdr = new FileHeader;
-	FileHeader *dirHdr = new FileHeader;
-
-        DEBUG('f', "Formatting the file system.\n");
-
+    
     // First, allocate space for FileHeaders for the directory and bitmap
     // (make sure no one else grabs these!)
 	freeMap->Mark(FreeMapSector);	    
 	freeMap->Mark(DirectorySector);
+
+	FileHeader *mapHdr = new FileHeader(2, freeMap);
+	FileHeader *dirHdr = new FileHeader(1, freeMap);
+
+        DEBUG('f', "Formatting the file system.\n");
 
     // Second, allocate space for the data blocks containing the contents
     // of the directory and bitmap files.  There better be enough space!
@@ -196,7 +197,7 @@ FileSystem::Create(char *name, int initialSize)
         else if (!directory->Add(name, sector))
             success = FALSE;	// no space in directory
 	else {
-    	    hdr = new FileHeader;
+    	    hdr = new FileHeader(0, freeMap);
 	    if (!hdr->Allocate(freeMap, initialSize))
             	success = FALSE;	// no space on disk for data
 	    else {	
