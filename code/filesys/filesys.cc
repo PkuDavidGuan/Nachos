@@ -321,17 +321,18 @@ FileSystem::Print()
     BitMap *freeMap = new BitMap(NumSectors);
     Directory *directory = new Directory(NumDirEntries);
 
+    printf("--------------------------------------\n");
     printf("Bit map file header:\n");
     bitHdr->FetchFrom(FreeMapSector);
     bitHdr->Print();
-
+    printf("--------------------------------------\n");
     printf("Directory file header:\n");
     dirHdr->FetchFrom(DirectorySector);
     dirHdr->Print();
-
+    printf("--------------------------------------\n");
     freeMap->FetchFrom(freeMapFile);
     freeMap->Print();
-
+    printf("--------------------------------------\n");
     directory->FetchFrom(directoryFile);
     directory->Print();
 

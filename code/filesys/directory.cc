@@ -87,12 +87,59 @@ Directory::WriteBack(OpenFile *file)
 //	"name" -- the file name to look up
 //----------------------------------------------------------------------
 
+static int nameBegin = -1;
+
 int
 Directory::FindIndex(char *name)
 {
-    for (int i = 0; i < tableSize; i++)
-        if (table[i].inUse && !strncmp(table[i].name, name, FileNameMaxLen))
-	    return i;
+    int nameLength = strlen(name)+1;
+    int copyBytes = 0;
+    int nextEntry = -1;
+    char *tmp = name;
+    bool flag = false;
+    for(int i = 0; i < tableSize; ++i)
+    {
+        name = tmp;        
+        nameLength = strlen(name) + 1;
+        flag = false;
+        if(nameLength > FileNameMaxLen + 1)
+            copyBytes = FileNameMaxLen + 1;
+        else
+            copyBytes = nameLength;
+        for(int j = i; j < tableSize; ++j)
+        {
+            if(table[j].inUse && !strncmp(table[j].name, name, copyBytes))
+            {
+                nameLength -= copyBytes;
+                if(nameLength == 0)
+                    return j;
+                nameBegin = nextEntry = ((table[j].sector < 0) ? -table[j].sector: table[j].sector);
+                i = j;
+                name += copyBytes;
+                flag = true;
+                break;
+            }
+        }
+        if(flag == false)
+            break;
+        while(nameLength > 0)
+        {
+            if(nameLength > FileNameMaxLen + 1)
+                copyBytes = FileNameMaxLen + 1;
+            else
+                copyBytes = nameLength;
+            if(table[nextEntry].inUse && !strncmp(table[nextEntry].name, name, copyBytes))
+            {
+                nameLength -= copyBytes;
+                if(nameLength == 0)
+                    return nextEntry;
+                nextEntry = (table[nextEntry].sector < 0) ? -table[nextEntry].sector: table[nextEntry].sector;
+                name += copyBytes;
+            }
+            else
+                break;
+        }
+    }
     return -1;		// name not in directory
 }
 
@@ -132,14 +179,44 @@ Directory::Add(char *name, int newSector)
     if (FindIndex(name) != -1)
 	return FALSE;
 
-    for (int i = 0; i < tableSize; i++)
-        if (!table[i].inUse) {
-            table[i].inUse = TRUE;
-            strncpy(table[i].name, name, FileNameMaxLen); 
-            table[i].sector = newSector;
-        return TRUE;
-	}
-    return FALSE;	// no space.  Fix when we have extensible files.
+    int nameLength = strlen(name) + 1;
+    int copyBytes = 0;
+    int preEntry = -1;
+    bool firstEntry = false;
+    while(nameLength > 0)
+    {
+        if(nameLength > FileNameMaxLen+1)
+            copyBytes = FileNameMaxLen+1;
+        else
+            copyBytes = nameLength;
+        for (int i = 0; i < tableSize; i++)
+        {
+            if (!table[i].inUse) 
+            {
+                if(!firstEntry)
+                {
+                    table[i].isFirst = true;
+                    firstEntry = true;
+                }
+                table[i].inUse = TRUE;
+                strncpy(table[i].name, name, copyBytes);
+                name = name + copyBytes;
+                if(preEntry >= 0)
+                    table[preEntry].sector = -i;
+                preEntry = i;
+                break;
+	        }
+        }
+        nameLength -= copyBytes;
+    }
+    if(nameLength == 0)
+    {
+        ASSERT(preEntry >= 0);
+        table[preEntry].sector = newSector;
+        return true;
+    }
+    else
+        return FALSE;	// no space.  Fix when we have extensible files.
 }
 
 //----------------------------------------------------------------------
@@ -157,7 +234,19 @@ Directory::Remove(char *name)
 
     if (i == -1)
 	return FALSE; 		// name not in directory
-    table[i].inUse = FALSE;
+    int nextEntry = nameBegin;
+    while(true)
+    {
+        table[nextEntry].inUse = false;
+        table[nextEntry].isFirst = false;
+        nextEntry = table[nextEntry].sector;
+        if(nextEntry < 0)
+            nextEntry = -nextEntry;
+        else
+            break;
+    }
+    table[nextEntry].inUse = false;
+    table[nextEntry].isFirst = false;
     return TRUE;	
 }
 
@@ -169,9 +258,38 @@ Directory::Remove(char *name)
 void
 Directory::List()
 {
-   for (int i = 0; i < tableSize; i++)
-	if (table[i].inUse)
-	    printf("%s\n", table[i].name);
+    bool notebook[tableSize];
+    memset(notebook, 0, sizeof(notebook));
+    int beginEntry;
+    for (int i = 0; i < tableSize; i++)
+    {
+        if (table[i].inUse && !notebook[i] && table[i].isFirst)
+        {
+            for(int j = 0; j < FileNameMaxLen+1; ++j)
+            {
+                if(table[i].name[j] != '\0')
+                    printf("%c", table[i].name[j]);
+                else
+                    break;
+            }
+            notebook[i] = true;
+            beginEntry = table[i].sector;
+            while(beginEntry < 0)
+            {
+                for(int j = 0; j < FileNameMaxLen+1; ++j)
+                {
+                    if(table[-beginEntry].name[j] != '\0')
+                        printf("%c", table[-beginEntry].name[j]);
+                    else
+                        break;
+                }
+                notebook[-beginEntry] = true;
+                beginEntry = table[-beginEntry].sector;
+            }
+            printf("\n");
+        }
+           
+    }       
 }
 
 //----------------------------------------------------------------------
@@ -186,12 +304,35 @@ Directory::Print()
     FileHeader *hdr = new FileHeader;
 
     printf("Directory contents:\n");
+    int nextEntry;
     for (int i = 0; i < tableSize; i++)
-	if (table[i].inUse) {
-	    printf("Name: %s, Sector: %d\n", table[i].name, table[i].sector);
-	    hdr->FetchFrom(table[i].sector);
-	    hdr->Print();
-	}
+	    if (table[i].inUse && table[i].isFirst) 
+        {
+            printf("--------------------------------------\n");
+	        printf("Name: ");
+            nextEntry = table[i].sector;
+            for(int j = 0; j < FileNameMaxLen+1; ++j)
+            {
+                if(table[i].name[j] != '\0')
+                    printf("%c", table[i].name[j]);
+                else
+                    break;
+            }
+            while(nextEntry < 0)
+            {
+                for(int j = 0; j < FileNameMaxLen+1; ++j)
+                {
+                    if(table[-nextEntry].name[j] != '\0')
+                        printf("%c", table[-nextEntry].name[j]);
+                    else
+                        break;
+                }
+                nextEntry = table[-nextEntry].sector;
+            }
+            printf(", File header: %d\n", nextEntry);
+	        hdr->FetchFrom(nextEntry);
+	        hdr->Print();
+	    }
     printf("\n");
     delete hdr;
 }
