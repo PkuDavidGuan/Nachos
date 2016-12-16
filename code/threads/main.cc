@@ -61,7 +61,7 @@ extern int count;
 // External functions used by this file
 
 extern void ThreadTest(void), Copy(char *unixFile, char *nachosFile);
-extern void Print(char *file), PerformanceTest(void);
+extern void Print(char *file), PerformanceTest(void), GuanTest();
 extern void StartProcess(char *file), ConsoleTest(char *in, char *out), DummyStartProcess(int dummy);
 extern void MailTest(int networkID);
 extern void printhello();
@@ -158,6 +158,8 @@ main(int argc, char **argv)
             fileSystem->Print();
 	} else if (!strcmp(*argv, "-t")) {	// performance test
             PerformanceTest();
+	} else if (!strcmp(*argv, "-G")) {	// performance test
+            GuanTest();
 	}
 #endif // FILESYS
 #ifdef NETWORK

@@ -117,6 +117,7 @@ FileHeader::Deallocate(BitMap *freeMap)
             }
         }
     }
+    freeMap->Clear(secondIndex);
 }
 
 //----------------------------------------------------------------------

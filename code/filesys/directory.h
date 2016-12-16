@@ -53,6 +53,7 @@ class Directory {
   public:
     Directory(int size); 		// Initialize an empty directory
 					// with space for "size" files
+    Directory(int size, int self, int father);
     ~Directory();			// De-allocate the directory
 
     void FetchFrom(OpenFile *file);  	// Init directory contents from disk

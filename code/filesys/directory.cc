@@ -42,7 +42,22 @@ Directory::Directory(int size)
     for (int i = 0; i < tableSize; i++)
 	table[i].inUse = FALSE;
 }
-
+Directory::Directory(int size, int self, int father)
+{
+    table = new DirectoryEntry[size];
+    tableSize = size;
+    for (int i = 0; i < tableSize; i++)
+	    table[i].inUse = FALSE;
+    
+    table[0].inUse = true;
+    table[0].isFirst = true;
+    strcpy(table[0].name, ".");
+    table[0].sector = self;
+    table[1].inUse = true;
+    table[1].isFirst = true;
+    strcpy(table[1].name, "..");
+    table[1].sector = father;
+}
 //----------------------------------------------------------------------
 // Directory::~Directory
 // 	De-allocate directory data structure.
@@ -87,7 +102,7 @@ Directory::WriteBack(OpenFile *file)
 //	"name" -- the file name to look up
 //----------------------------------------------------------------------
 
-static int nameBegin = -1;
+int nameBegin = -1;
 
 int
 Directory::FindIndex(char *name)
@@ -108,13 +123,13 @@ Directory::FindIndex(char *name)
             copyBytes = nameLength;
         for(int j = i; j < tableSize; ++j)
         {
-            if(table[j].inUse && !strncmp(table[j].name, name, copyBytes))
+            if(table[j].inUse && table[j].isFirst &&!strncmp(table[j].name, name, copyBytes))
             {
                 nameLength -= copyBytes;
+                nameBegin = j;
                 if(nameLength == 0)
                     return j;
-                nameBegin = nextEntry = ((table[j].sector < 0) ? -table[j].sector: table[j].sector);
-                i = j;
+                nextEntry = ((table[j].sector < 0) ? -table[j].sector: table[j].sector);
                 name += copyBytes;
                 flag = true;
                 break;
@@ -237,6 +252,7 @@ Directory::Remove(char *name)
     int nextEntry = nameBegin;
     while(true)
     {
+        ASSERT(nextEntry >= 0);
         table[nextEntry].inUse = false;
         table[nextEntry].isFirst = false;
         nextEntry = table[nextEntry].sector;
@@ -245,8 +261,6 @@ Directory::Remove(char *name)
         else
             break;
     }
-    table[nextEntry].inUse = false;
-    table[nextEntry].isFirst = false;
     return TRUE;	
 }
 
@@ -261,6 +275,9 @@ Directory::List()
     bool notebook[tableSize];
     memset(notebook, 0, sizeof(notebook));
     int beginEntry;
+    FileHeader *hdr;
+    OpenFile *fd;
+    Directory *subdir;
     for (int i = 0; i < tableSize; i++)
     {
         if (table[i].inUse && !notebook[i] && table[i].isFirst)
@@ -287,8 +304,21 @@ Directory::List()
                 beginEntry = table[-beginEntry].sector;
             }
             printf("\n");
-        }
-           
+            hdr = new FileHeader;
+            hdr->FetchFrom(beginEntry);
+            if(i!=0 && i!=1 && hdr->GetFileType() == TYPE_DIR)
+            {
+                fd = new OpenFile(beginEntry);
+                subdir = new Directory(10);
+                subdir->FetchFrom(fd);
+                printf("========sub dir:=========\n");
+                subdir->List();
+                printf("=======end sub dir=======\n");
+                delete subdir;
+                delete fd;
+            }
+            delete hdr;
+        }      
     }       
 }
 
