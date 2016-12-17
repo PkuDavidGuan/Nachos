@@ -185,22 +185,28 @@ PerformanceTest()
 
 void GuanTest()
 {
-    printf("Test: create&open&delete a file.\n");
-    fileSystem->Create("dir1/file1", 128, 0);
-    fileSystem->Create("dir1/file2", 128, 0);
-    fileSystem->List();
-    bool ret;
-    // printf("############################try to open a file###########################\n");
-    // ret = (fileSystem->Open("dir1/file1") != NULL);
+    // printf("Test: create&open&delete a file.\n");
+    // fileSystem->Create("dir1/file1", 128, 0);
+    // fileSystem->Create("dir1/file2", 128, 0);
+    // fileSystem->List();
+    // bool ret;
+    // // printf("############################try to open a file###########################\n");
+    // // ret = (fileSystem->Open("dir1/file1") != NULL);
+    // // if(ret)
+    // //     printf("Open it.\n");
+    // // else
+    // //     printf("Fail.\n");
+    // printf("###########################try to delete a file##########################\n");
+    // ret = fileSystem->Remove("dir1/file1");
     // if(ret)
-    //     printf("Open it.\n");
+    //     printf("Delete it.\n");
     // else
     //     printf("Fail.\n");
-    printf("###########################try to delete a file##########################\n");
-    ret = fileSystem->Remove("dir1/file1");
-    if(ret)
-        printf("Delete it.\n");
-    else
-        printf("Fail.\n");
-    fileSystem->List();
+    // fileSystem->List();
+    printf("Test: incremental test.\n");
+    fileSystem->Create("file3", 1, 0);
+    OpenFile *fd = fileSystem->Open("file3");
+    printf("Now, begin to write.\n");
+    fd->Write("I love nachos.", 15);
+    fileSystem->Print();
 }

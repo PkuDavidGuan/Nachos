@@ -66,6 +66,7 @@ class FileHeader {
 
     void Print();			// Print the contents of the file.
     FileType GetFileType() { return fileType; }
+    bool AddSpace(int size, BitMap *freeMap);
   private:
     int numBytes;			// Number of bytes in the file
     int numSectors;			// Number of data sectors in the file

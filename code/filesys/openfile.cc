@@ -15,6 +15,8 @@
 #include "filehdr.h"
 #include "openfile.h"
 #include "system.h"
+#include "bitmap.h"
+#include "disk.h"
 #ifdef HOST_SPARC
 #include <strings.h>
 #endif
@@ -31,6 +33,7 @@ OpenFile::OpenFile(int sector)
 { 
     hdr = new FileHeader;
     hdr->FetchFrom(sector);
+    hdrSector = sector;
     seekPosition = 0;
 }
 
@@ -146,6 +149,7 @@ OpenFile::ReadAt(char *into, int numBytes, int position)
 int
 OpenFile::WriteAt(char *from, int numBytes, int position)
 {
+    //printf("from: %s, numBytes: %d, position: %d\n", from, numBytes, position);
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
     bool firstAligned, lastAligned;
@@ -153,8 +157,18 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
 
     if ((numBytes <= 0) || (position >= fileLength))
 	return 0;				// check request
+    bool succeedAdd = false;
     if ((position + numBytes) > fileLength)
-	numBytes = fileLength - position;
+    {
+        //printf("i came here\n");
+        BitMap* freeMap = new BitMap(NumSectors);
+        freeMap->FetchFrom(fileSystem->GetMap());
+	    succeedAdd = hdr->AddSpace(position + numBytes - fileLength, freeMap);
+        if(!succeedAdd)
+            return 0;
+        freeMap->WriteBack(fileSystem->GetMap());
+        hdr->WriteBack(hdrSector);
+    }
     DEBUG('f', "Writing %d bytes at %d, from file of length %d.\n", 	
 			numBytes, position, fileLength);
 

@@ -62,9 +62,10 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
 { 
     numBytes = fileSize;
     numSectors  = divRoundUp(fileSize, SectorSize);
+    //printf("fileSize: %d, allocate: %d\n", fileSize, numSectors);
     ASSERT((numSectors&0xfffffc00)==0);
-    int indexII = numSectors >> 5;
-    int indexI = numSectors & 31;
+    int indexII = (numSectors-1) >> 5;
+    int indexI = (numSectors-1) & 31;
     if (freeMap->NumClear() < numSectors+indexII+1)
 	return FALSE;		// not enough space
 
@@ -90,6 +91,56 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
     return TRUE;
 }
 
+bool FileHeader::AddSpace(int size, BitMap *freeMap)
+{
+    int oriIndexII = (numSectors-1) >> 5;
+    int oriIndexI = (numSectors-1) & 31;
+    numBytes += size;
+    int addSectors = divRoundUp(numBytes, SectorSize)-numSectors;
+    numSectors += addSectors;
+    ASSERT((numSectors&0xfffffc00)==0);
+    if(addSectors == 0)
+        return true;
+
+    int indexII = (numSectors-1) >> 5;
+    int indexI = (numSectors-1) & 31;
+    //printf("sectors: total %d, add %d; indexII: ori %d, now %d; indexI: ori %d, now %d\n",
+    //numSectors, addSectors, oriIndexII, indexII, oriIndexI, indexI);
+    if (freeMap->NumClear() < indexII-oriIndexII+addSectors)
+	    return FALSE;
+    int buffer[32];
+    int tempBuffer[32];
+    synchDisk->ReadSector(secondIndex, (char *)buffer);
+    synchDisk->ReadSector(buffer[oriIndexII], (char *)tempBuffer);
+    if(indexII == oriIndexII)
+    {
+        for(int i = oriIndexI+1; i <= indexI; ++i)
+            tempBuffer[i] = freeMap->Find();
+    }
+    else
+    {
+        for(int i = oriIndexI+1; i < 32; ++i)
+            tempBuffer[i] = freeMap->Find();
+    }
+    synchDisk->WriteSector(buffer[oriIndexII], (char *)tempBuffer);
+    for(int i = 1; i < indexII-oriIndexII; ++i)
+    {
+        buffer[oriIndexII+i] = freeMap->Find();
+        memset(tempBuffer, -1, sizeof(tempBuffer));
+        for(int j = 0; j < 32; ++j)
+        {
+            tempBuffer[j] = freeMap->Find();
+        }
+        synchDisk->WriteSector(buffer[oriIndexII+i], (char *)tempBuffer);
+    }
+    buffer[indexII] = freeMap->Find();
+    memset(tempBuffer, -1, sizeof(tempBuffer));
+    for(int i = 0; i <= indexI; ++i)
+        tempBuffer[i] = freeMap->Find();
+    synchDisk->WriteSector(buffer[indexII], (char *)tempBuffer);
+    synchDisk->WriteSector(secondIndex, (char *)buffer);
+    return true;
+}
 //----------------------------------------------------------------------
 // FileHeader::Deallocate
 // 	De-allocate all the space allocated for data blocks for this file.
@@ -192,7 +243,6 @@ FileHeader::FileLength()
 void
 FileHeader::Print()
 {
-    int i, j, k;
     char *data = new char[SectorSize];
 
     printf("FileHeader contents.  File size: %d.  Created time: %d.  Access time: %d. Modified time:%d\n", numBytes, (int)createTime, (int)accessTime, (int)modifiedTime);
@@ -226,6 +276,7 @@ FileHeader::Print()
     //     printf("\n"); 
     // }
 
+    int k = 0;
     for(int i = 0; i < 32; ++i)
     {
         if(buffer[i] == -1)
@@ -238,12 +289,12 @@ FileHeader::Print()
                 break;
             
             synchDisk->ReadSector(tempBuffer[j], data);
-            for (j = 0; (j < SectorSize) && (k < numBytes); j++, k++) 
+            for (int m = 0; (m < SectorSize) && (k < numBytes); m++, k++) 
             {
-	            if ('\040' <= data[j] && data[j] <= '\176')   // isprint(data[j])
-		            printf("%c", data[j]);
+	            if ('\040' <= data[m] && data[m] <= '\176')   // isprint(data[j])
+		            printf("%c", data[m]);
                 else
-		            printf("\\%x", (unsigned char)data[j]);
+		            printf("\\%x", (unsigned char)data[m]);
 	        }
             printf("\n"); 
         }
