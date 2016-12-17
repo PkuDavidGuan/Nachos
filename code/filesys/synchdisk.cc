@@ -107,3 +107,87 @@ SynchDisk::RequestDone()
 { 
     semaphore->V();
 }
+
+//----------------------------------------------------------------------
+//It is a lovely dividing line
+//----------------------------------------------------------------------
+
+//----------------------------------------------------------------------
+// ConsoleRequestDone
+// 	Disk interrupt handler.  Need this to be a C routine, because 
+//	C++ can't handle pointers to member functions.
+//----------------------------------------------------------------------
+
+static void
+ConsoleReadRequestDone (int arg)
+{
+    SynchConsole* console = (SynchConsole *)arg;
+
+    console->ReadRequestDone();
+}
+static void
+ConsoleWriteRequestDone (int arg)
+{
+    SynchConsole* console = (SynchConsole *)arg;
+
+    console->WriteRequestDone();
+}
+
+//----------------------------------------------------------------------
+// SynchConsole::SynchConsole
+// 	Initialize the synchronous interface to the physical disk, in turn
+//	initializing the physical disk.
+//
+//----------------------------------------------------------------------
+
+SynchConsole::SynchConsole(char *in, char *out)
+{
+    readAvail = new Semaphore("synchconsole readAvail", 0);
+    writeDone = new Semaphore("synchconsole writeDone", 0);
+    lock = new Lock("synch console lock");
+    console = new Console(in, out, ConsoleReadRequestDone, ConsoleWriteRequestDone, (int) this);
+}
+
+//----------------------------------------------------------------------
+// SynchConsole::~SynchConsole
+// 	De-allocate data structures needed for the synchronous console
+//	abstraction.
+//----------------------------------------------------------------------
+
+SynchConsole::~SynchConsole()
+{
+    delete console;
+    delete lock;
+    delete readAvail;
+    delete writeDone;
+}
+
+char
+SynchConsole::GetChar()
+{
+    lock->Acquire();			// only one disk I/O at a time
+    readAvail->P();
+    inComing = console->GetChar();
+    lock->Release();
+    return inComing;
+}
+
+void
+SynchConsole::PutChar(char ch)
+{
+    lock->Acquire();			// only one disk I/O at a time
+    console->PutChar(ch);
+    writeDone->P();			// wait for interrupt
+    lock->Release();
+}
+
+void
+SynchConsole::ReadRequestDone()
+{ 
+    readAvail->V();
+}
+void
+SynchConsole::WriteRequestDone()
+{ 
+    writeDone->V();
+}

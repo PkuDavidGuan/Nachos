@@ -13,6 +13,7 @@
 
 #include "disk.h"
 #include "synch.h"
+#include "console.h"
 
 // The following class defines a "synchronous" disk abstraction.
 // As with other I/O devices, the raw physical disk is an asynchronous device --
@@ -49,5 +50,25 @@ class SynchDisk {
     Lock *lock;		  		// Only one read/write request
 					// can be sent to the disk at a time
 };
+class SynchConsole {
+  public:
+    SynchConsole(char *in, char *out);    		// Initialize a synchronous console,
+					// by initializing the raw console.
+    ~SynchConsole();			// De-allocate 
+    
+    char GetChar();
+    				
+    void PutChar(char ch);
+    
+    void ReadRequestDone();
+    void WriteRequestDone();				
 
+  private:
+    Console *console;		  		// Raw console device
+    Semaphore *readAvail; 		
+    Semaphore *writeDone;     // To synchronize requesting 
+    Lock *lock;		  		// Only one read/write request
+					// can be sent to the console at a time
+    char inComing;
+};
 #endif // SYNCHDISK_H

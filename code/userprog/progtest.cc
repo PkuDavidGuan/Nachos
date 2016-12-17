@@ -13,6 +13,7 @@
 #include "console.h"
 #include "addrspace.h"
 #include "synch.h"
+#include "synchdisk.h"
 
 //----------------------------------------------------------------------
 // StartProcess
@@ -51,7 +52,7 @@ void DummyStartProcess(int dummy)
 // Data structures needed for the console test.  Threads making
 // I/O requests wait on a Semaphore to delay until the I/O completes.
 
-static Console *console;
+//static Console *console;
 static Semaphore *readAvail;
 static Semaphore *writeDone;
 
@@ -74,15 +75,23 @@ ConsoleTest (char *in, char *out)
 {
     char ch;
 
-    console = new Console(in, out, ReadAvail, WriteDone, 0);
-    readAvail = new Semaphore("read avail", 0);
-    writeDone = new Semaphore("write done", 0);
+    // console = new Console(in, out, ReadAvail, WriteDone, 0);
+    // readAvail = new Semaphore("read avail", 0);
+    // writeDone = new Semaphore("write done", 0);
     
-    for (;;) {
-	readAvail->P();		// wait for character to arrive
-	ch = console->GetChar();
-	console->PutChar(ch);	// echo it!
-	writeDone->P() ;        // wait for write to finish
-	if (ch == 'q') return;  // if q, quit
+    // for (;;) {
+	// readAvail->P();		// wait for character to arrive
+	// ch = console->GetChar();
+	// console->PutChar(ch);	// echo it!
+	// writeDone->P() ;        // wait for write to finish
+	// if (ch == 'q') return;  // if q, quit
+    // }
+    SynchConsole *console = new SynchConsole(in, out);
+    while(true)
+    {
+        ch = console->GetChar();
+        console->PutChar(ch);
+        if(ch == 'q')
+            return;
     }
 }
