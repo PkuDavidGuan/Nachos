@@ -8,6 +8,7 @@
 
 #include "copyright.h"
 #include "bitmap.h"
+#include "disk.h"
 
 //----------------------------------------------------------------------
 // BitMap::BitMap
@@ -94,6 +95,22 @@ BitMap::Test(int which)
 int 
 BitMap::Find() 
 {
+    for (int i = 0; i < numBits; i++)
+	if (!Test(i)) {
+	    Mark(i);
+	    return i;
+	}
+    return -1;
+}
+
+int 
+BitMap::proFind(int trackNum) 
+{
+	for (int i = 0; i < SectorsPerTrack; i++)
+	if (!Test(i + trackNum*SectorsPerTrack)) {
+	    Mark(i+trackNum*SectorsPerTrack);
+	    return i+trackNum*SectorsPerTrack;
+	}
     for (int i = 0; i < numBits; i++)
 	if (!Test(i)) {
 	    Mark(i);

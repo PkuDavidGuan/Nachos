@@ -20,6 +20,7 @@
 #include "thread.h"
 #include "disk.h"
 #include "stats.h"
+#include "fileManager.h"
 
 #define TransferSize 	10 	// make it small, just to be difficult
 
@@ -182,7 +183,20 @@ PerformanceTest()
     }
     stats->Print();
 }
-
+FileManager test;
+void openfile(int i)
+{
+    printf("file opened the %d time.\n",i);
+    bool ret = test.Open("file1");
+    printf("file state: %d, try to close %d\n", (int)ret, i);
+    test.Close("file1");
+    printf("closed %d\n", i);
+}
+void removefile(int i)
+{
+    test.Remove("file1");
+    printf("file removed the %d time.\n",i);
+}
 void GuanTest()
 {
     // printf("Test: create&open&delete a file.\n");
@@ -203,10 +217,19 @@ void GuanTest()
     // else
     //     printf("Fail.\n");
     // fileSystem->List();
-    printf("Test: incremental test.\n");
-    fileSystem->Create("file3", 1, 0);
-    OpenFile *fd = fileSystem->Open("file3");
-    printf("Now, begin to write.\n");
-    fd->Write("I love nachos.", 15);
-    fileSystem->Print();
+    // printf("Test: incremental test.\n");
+    // fileSystem->Create("file3", 1, 0);
+    // OpenFile *fd = fileSystem->Open("file3");
+    // printf("Now, begin to write.\n");
+    // fd->Write("I love nachos.", 15);
+    // fileSystem->Print();
+    printf("Test: exercise 7\n");
+    test.Create("file1", 128, 0);
+    printf("create file1\n");
+    Thread *t1 = taskmanager->createThread("thread1", 1);
+    t1->Fork(openfile, 1);
+    Thread *t2 = taskmanager->createThread("thread2", 1);
+    t2->Fork(openfile, 2);
+    Thread *t4 = taskmanager->createThread("thread3", 1);
+    t4->Fork(removefile, 1);
 }

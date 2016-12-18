@@ -69,23 +69,24 @@ FileHeader::Allocate(BitMap *freeMap, int fileSize)
     if (freeMap->NumClear() < numSectors+indexII+1)
 	return FALSE;		// not enough space
 
+    int trackNum = secondIndex % SectorsPerTrack;
     int buffer[32];
     int tempBuffer[32];
     synchDisk->ReadSector(secondIndex, (char *)buffer);
     for(int i = 0; i < indexII; ++i)
     {
-        buffer[i] = freeMap->Find();
+        buffer[i] = freeMap->proFind(trackNum);
         memset(tempBuffer, -1, sizeof(tempBuffer));
         for(int j = 0; j < 32; ++j)
         {
-            tempBuffer[j] = freeMap->Find();
+            tempBuffer[j] = freeMap->proFind(trackNum);
         }
         synchDisk->WriteSector(buffer[i], (char *)tempBuffer);
     }
-    buffer[indexII] = freeMap->Find();
+    buffer[indexII] = freeMap->proFind(trackNum);
     memset(tempBuffer, -1, sizeof(tempBuffer));
     for(int j = 0; j <= indexI; ++j)
-        tempBuffer[j] = freeMap->Find();
+        tempBuffer[j] = freeMap->proFind(trackNum);
     synchDisk->WriteSector(buffer[indexII], (char *)tempBuffer);
     synchDisk->WriteSector(secondIndex, (char *)buffer);
     return TRUE;
@@ -102,6 +103,7 @@ bool FileHeader::AddSpace(int size, BitMap *freeMap)
     if(addSectors == 0)
         return true;
 
+    int trackNum = secondIndex % SectorsPerTrack;
     int indexII = (numSectors-1) >> 5;
     int indexI = (numSectors-1) & 31;
     //printf("sectors: total %d, add %d; indexII: ori %d, now %d; indexI: ori %d, now %d\n",
@@ -115,28 +117,28 @@ bool FileHeader::AddSpace(int size, BitMap *freeMap)
     if(indexII == oriIndexII)
     {
         for(int i = oriIndexI+1; i <= indexI; ++i)
-            tempBuffer[i] = freeMap->Find();
+            tempBuffer[i] = freeMap->proFind(trackNum);
     }
     else
     {
         for(int i = oriIndexI+1; i < 32; ++i)
-            tempBuffer[i] = freeMap->Find();
+            tempBuffer[i] = freeMap->proFind(trackNum);
     }
     synchDisk->WriteSector(buffer[oriIndexII], (char *)tempBuffer);
     for(int i = 1; i < indexII-oriIndexII; ++i)
     {
-        buffer[oriIndexII+i] = freeMap->Find();
+        buffer[oriIndexII+i] = freeMap->proFind(trackNum);
         memset(tempBuffer, -1, sizeof(tempBuffer));
         for(int j = 0; j < 32; ++j)
         {
-            tempBuffer[j] = freeMap->Find();
+            tempBuffer[j] = freeMap->proFind(trackNum);
         }
         synchDisk->WriteSector(buffer[oriIndexII+i], (char *)tempBuffer);
     }
-    buffer[indexII] = freeMap->Find();
+    buffer[indexII] = freeMap->proFind(trackNum);
     memset(tempBuffer, -1, sizeof(tempBuffer));
     for(int i = 0; i <= indexI; ++i)
-        tempBuffer[i] = freeMap->Find();
+        tempBuffer[i] = freeMap->proFind(trackNum);
     synchDisk->WriteSector(buffer[indexII], (char *)tempBuffer);
     synchDisk->WriteSector(secondIndex, (char *)buffer);
     return true;
