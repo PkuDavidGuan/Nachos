@@ -224,8 +224,8 @@ void GuanTest()
     // fd->Write("I love nachos.", 15);
     // fileSystem->Print();
     printf("Test: exercise 7\n");
-    test.Create("file1", 128, 0);
-    printf("create file1\n");
+    bool ret = test.Create("file1", 128, 0);
+    printf("create file1, %d\n", ret);
     Thread *t1 = taskmanager->createThread("thread1", 1);
     t1->Fork(openfile, 1);
     Thread *t2 = taskmanager->createThread("thread2", 1);

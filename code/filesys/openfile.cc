@@ -17,6 +17,7 @@
 #include "system.h"
 #include "bitmap.h"
 #include "disk.h"
+#include "synch.h"
 #ifdef HOST_SPARC
 #include <strings.h>
 #endif
@@ -28,7 +29,7 @@
 //
 //	"sector" -- the location on disk of the file header for this file
 //----------------------------------------------------------------------
-
+static rwLock fileSem[100];
 OpenFile::OpenFile(int sector)
 { 
     hdr = new FileHeader;
@@ -136,10 +137,12 @@ OpenFile::ReadAt(char *into, int numBytes, int position)
 
     // read in all the full and partial sectors that we need
     buf = new char[numSectors * SectorSize];
+    fileSem[hdrSector].start_r();
     for (i = firstSector; i <= lastSector; i++)	
         synchDisk->ReadSector(hdr->ByteToSector(i * SectorSize), 
 					&buf[(i - firstSector) * SectorSize]);
-
+    
+    fileSem[hdrSector].finish_r();
     // copy the part we want
     bcopy(&buf[position - (firstSector * SectorSize)], into, numBytes);
     delete [] buf;
@@ -192,9 +195,11 @@ OpenFile::WriteAt(char *from, int numBytes, int position)
     bcopy(from, &buf[position - (firstSector * SectorSize)], numBytes);
 
 // write modified sectors back
+    fileSem[hdrSector].start_w();
     for (i = firstSector; i <= lastSector; i++)	
         synchDisk->WriteSector(hdr->ByteToSector(i * SectorSize), 
 					&buf[(i - firstSector) * SectorSize]);
+    fileSem[hdrSector].finish_w();
     delete [] buf;
     return numBytes;
 }

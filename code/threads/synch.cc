@@ -201,6 +201,12 @@ rwLock::rwLock(char* debugName)
     w = new Semaphore("write is ok", 1);
     rc = 0;
 }
+rwLock::rwLock() 
+{
+    m = new Semaphore("read/write mutex", 1);
+    w = new Semaphore("write is ok", 1);
+    rc = 0;
+}
 
 rwLock::~rwLock() 
 {
@@ -210,6 +216,7 @@ rwLock::~rwLock()
 
 void rwLock::start_r()
 {
+    DEBUG('f', "start to read\n");
     m->P();
     rc++;
     if(rc == 1)
@@ -219,6 +226,7 @@ void rwLock::start_r()
 
 void rwLock::finish_r()
 {
+    DEBUG('f',"read finished\n");
     m->P();
     rc--;
     if(rc == 0)
@@ -228,10 +236,12 @@ void rwLock::finish_r()
 
 void rwLock::start_w()
 {
+    DEBUG('f',"start to write\n");
     w->P();
 }
 
 void rwLock::finish_w()
 {
+    DEBUG('f', "write finished\n");
     w->V();
 }

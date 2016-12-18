@@ -139,6 +139,7 @@ class Condition {
 class rwLock {
 public:
     rwLock(char* debugName);
+    rwLock();
     ~rwLock();
     char* getName() { return (name); }
 
