@@ -269,6 +269,7 @@ void GuanTest()
     //-----------------------------------------------------------------------------
     printf("Test: pipe\n");
     pipe = new Pipe;
+    synchConsole = new SynchConsole(NULL, NULL);
     Thread *t1 = taskmanager->createThread("thread1", 1);
     t1->Fork(PutThread, 1);
     Thread *t2 = taskmanager->createThread("thread2", 1);

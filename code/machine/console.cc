@@ -17,11 +17,12 @@
 #include "console.h"
 #include "system.h"
 
+static bool live = true;
 // Dummy functions because C++ is weird about pointers to member functions
 static void ConsoleReadPoll(int c) 
-{ Console *console = (Console *)c; console->CheckCharAvail(); }
+{ if(!live) return; Console *console = (Console *)c; console->CheckCharAvail(); }
 static void ConsoleWriteDone(int c)
-{ Console *console = (Console *)c; console->WriteDone(); }
+{ if(!live) return; Console *console = (Console *)c; console->WriteDone(); }
 
 //----------------------------------------------------------------------
 // Console::Console
@@ -39,6 +40,8 @@ static void ConsoleWriteDone(int c)
 Console::Console(char *readFile, char *writeFile, VoidFunctionPtr readAvail, 
 		VoidFunctionPtr writeDone, int callArg)
 {
+    //printf("create console, %s\n", readFile);
+    live = true;
     if (readFile == NULL)
 	readFileNo = 0;					// keyboard = stdin
     else
@@ -66,10 +69,18 @@ Console::Console(char *readFile, char *writeFile, VoidFunctionPtr readAvail,
 
 Console::~Console()
 {
+    live = false;
+    //printf(" readFile: %d, writeFile: %d\n",readFileNo, writeFileNo);
     if (readFileNo != 0)
+    {
+        printf("gys\n");
 	Close(readFileNo);
+    }
     if (writeFileNo != 1)
+    {
+        printf("gys2\n");
 	Close(writeFileNo);
+    }
 }
 
 //----------------------------------------------------------------------

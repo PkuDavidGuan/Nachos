@@ -169,7 +169,7 @@ Initialize(int argc, char **argv)
 
 #ifdef FILESYS
     synchDisk = new SynchDisk("DISK");
-    synchConsole = new SynchConsole(NULL, NULL);
+   // synchConsole = new SynchConsole(NULL, NULL);
 #endif
 
 #ifdef FILESYS_NEEDED
@@ -203,8 +203,6 @@ Cleanup()
 
 #ifdef FILESYS
     delete synchDisk;
-    if(synchConsole != NULL)
-        delete synchConsole;
 #endif
     
     delete timer;
