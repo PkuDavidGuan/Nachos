@@ -21,6 +21,7 @@
 #include "disk.h"
 #include "stats.h"
 #include "fileManager.h"
+#include "synch.h"
 
 #define TransferSize 	10 	// make it small, just to be difficult
 
@@ -197,8 +198,39 @@ void removefile(int i)
     test.Remove("file1");
     printf("file removed the %d time.\n",i);
 }
+
+Pipe *pipe;
+void PutThread(int none)
+{
+    OpenFile *stdOut = new OpenFile(-1);
+    char ch;
+    while(true)
+    {
+        ch = pipe->Get();
+        stdOut->Write(&ch, 1);
+        if(ch == 'q')
+        {
+            delete synchConsole;
+            break;
+        }
+    }
+
+}
+void GetThread(int none)
+{
+    OpenFile *stdIn = new OpenFile(-2);
+    char ch;
+    while(true)
+    {
+        stdIn->Read(&ch, 1);
+        pipe->Put(ch);
+        if(ch == 'q')
+            break;
+    }
+}
 void GuanTest()
 {
+    //-----------------------------------------------------------------------------
     // printf("Test: create&open&delete a file.\n");
     // fileSystem->Create("dir1/file1", 128, 0);
     // fileSystem->Create("dir1/file2", 128, 0);
@@ -217,19 +249,28 @@ void GuanTest()
     // else
     //     printf("Fail.\n");
     // fileSystem->List();
+    //-----------------------------------------------------------------------------
     // printf("Test: incremental test.\n");
     // fileSystem->Create("file3", 1, 0);
     // OpenFile *fd = fileSystem->Open("file3");
     // printf("Now, begin to write.\n");
     // fd->Write("I love nachos.", 15);
     // fileSystem->Print();
-    printf("Test: exercise 7\n");
-    bool ret = test.Create("file1", 128, 0);
-    printf("create file1, %d\n", ret);
+    //-----------------------------------------------------------------------------
+    // printf("Test: exercise 7\n");
+    // bool ret = test.Create("file1", 128, 0);
+    // printf("create file1, %d\n", ret);
+    // Thread *t1 = taskmanager->createThread("thread1", 1);
+    // t1->Fork(openfile, 1);
+    // Thread *t2 = taskmanager->createThread("thread2", 1);
+    // t2->Fork(openfile, 2);
+    // Thread *t4 = taskmanager->createThread("thread3", 1);
+    // t4->Fork(removefile, 1);
+    //-----------------------------------------------------------------------------
+    printf("Test: pipe\n");
+    pipe = new Pipe;
     Thread *t1 = taskmanager->createThread("thread1", 1);
-    t1->Fork(openfile, 1);
+    t1->Fork(PutThread, 1);
     Thread *t2 = taskmanager->createThread("thread2", 1);
-    t2->Fork(openfile, 2);
-    Thread *t4 = taskmanager->createThread("thread3", 1);
-    t4->Fork(removefile, 1);
+    t2->Fork(GetThread, 1);
 }

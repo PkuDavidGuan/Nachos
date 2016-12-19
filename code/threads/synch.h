@@ -154,4 +154,26 @@ private:
     Semaphore* w;
     int rc;
 };
+#ifdef FILESYS
+
+#define PipeSize 1024
+class Pipe
+{
+public:
+    Pipe();
+    ~Pipe();
+    void Put(char ch);
+    char Get();
+private:
+    char buffer[PipeSize];
+    int readPos;
+    int putPos;
+    bool lineReady;
+    Semaphore *full;
+    Semaphore *empty;
+    Semaphore *m;
+    Semaphore *line;
+};
+#endif
+
 #endif // SYNCH_H

@@ -26,6 +26,7 @@ FileSystem  *fileSystem;
 
 #ifdef FILESYS
 SynchDisk   *synchDisk;
+SynchConsole *synchConsole;
 #endif
 
 #ifdef USER_PROGRAM	// requires either FILESYS or FILESYS_STUB
@@ -168,6 +169,7 @@ Initialize(int argc, char **argv)
 
 #ifdef FILESYS
     synchDisk = new SynchDisk("DISK");
+    synchConsole = new SynchConsole(NULL, NULL);
 #endif
 
 #ifdef FILESYS_NEEDED
@@ -201,6 +203,8 @@ Cleanup()
 
 #ifdef FILESYS
     delete synchDisk;
+    if(synchConsole != NULL)
+        delete synchConsole;
 #endif
     
     delete timer;

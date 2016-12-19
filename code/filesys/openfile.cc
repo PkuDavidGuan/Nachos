@@ -32,8 +32,11 @@
 static rwLock fileSem[100];
 OpenFile::OpenFile(int sector)
 { 
-    hdr = new FileHeader;
-    hdr->FetchFrom(sector);
+    if(sector >= 0)
+    {
+        hdr = new FileHeader;
+        hdr->FetchFrom(sector);
+    }
     hdrSector = sector;
     seekPosition = 0;
 }
@@ -45,7 +48,8 @@ OpenFile::OpenFile(int sector)
 
 OpenFile::~OpenFile()
 {
-    delete hdr;
+    if(hdrSector >= 0)
+        delete hdr;
 }
 
 //----------------------------------------------------------------------
@@ -120,6 +124,12 @@ OpenFile::Write(char *into, int numBytes)
 int
 OpenFile::ReadAt(char *into, int numBytes, int position)
 {
+    if(hdrSector < 0)
+    {
+        ASSERT(hdrSector == -2 && numBytes == 1);
+        *into = synchConsole->GetChar();
+        return numBytes;
+    }
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;
     char *buf;
@@ -152,6 +162,12 @@ OpenFile::ReadAt(char *into, int numBytes, int position)
 int
 OpenFile::WriteAt(char *from, int numBytes, int position)
 {
+    if(hdrSector < 0)
+    {
+        ASSERT(hdrSector == -1 && numBytes == 1);
+        synchConsole->PutChar(*from);
+        return numBytes;
+    }
     //printf("from: %s, numBytes: %d, position: %d\n", from, numBytes, position);
     int fileLength = hdr->FileLength();
     int i, firstSector, lastSector, numSectors;

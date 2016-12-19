@@ -245,3 +245,55 @@ void rwLock::finish_w()
     DEBUG('f', "write finished\n");
     w->V();
 }
+
+#ifdef FILESYS
+Pipe::Pipe()
+{
+    memset(buffer, 0, sizeof(buffer));
+    readPos = putPos = 0;
+    lineReady = false;
+    m = new Semaphore("pipe", 1);
+    full = new Semaphore("full", PipeSize);
+    empty = new Semaphore("empty", 0);
+    line = new Semaphore("read a line", 0);
+}
+Pipe::~Pipe()
+{
+    delete m;
+    delete full;
+    delete empty;
+    delete line;
+}
+void Pipe::Put(char ch)
+{
+    full->P();
+    m->P();
+    buffer[putPos] = ch;
+    putPos += 1;
+    putPos %= PipeSize;
+    m->V();
+    empty->V();
+    if(ch == '\n')
+    {
+        lineReady = true;
+        line->P();
+    }
+}
+char Pipe::Get()
+{
+    char ret;
+    empty->P();
+    m->P();
+    ret = buffer[readPos];
+    readPos += 1;
+    readPos %= PipeSize;
+    m->V();
+    full->V();
+    if(readPos == putPos && lineReady)
+    {
+        lineReady = false;
+        line->V();
+    }
+    return ret;
+}
+#endif
