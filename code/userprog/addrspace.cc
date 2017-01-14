@@ -76,6 +76,9 @@ AddrSpace::AddrSpace(OpenFile *executable)
     size = noffH.code.size + noffH.initData.size + noffH.uninitData.size 
 			+ UserStackSize;	// we need to increase the size
 						// to leave room for the stack
+    DEBUG('G', "code: viraddr,0x%x; inFileaddr,0x%x; size,0x%x\n", noffH.code.virtualAddr, noffH.code.inFileAddr, noffH.code.size);
+    DEBUG('G', "data: viraddr,0x%x; inFileaddr,0x%x; size,0x%x\n", noffH.initData.virtualAddr, noffH.initData.inFileAddr, noffH.initData.size);
+    DEBUG('G', "bss: viraddr,0x%x; inFileaddr,0x%x; size,0x%x\n", noffH.uninitData.virtualAddr, noffH.uninitData.inFileAddr, noffH.uninitData.size);
     numPages = divRoundUp(size, PageSize);
     size = numPages * PageSize;
 

@@ -458,7 +458,7 @@ bitmap.o: ../userprog/bitmap.cc ../threads/copyright.h \
  /usr/include/_G_config.h /usr/include/wchar.h ../threads/stdarg.h \
  /usr/include/i386-linux-gnu/bits/stdio_lim.h \
  /usr/include/i386-linux-gnu/bits/sys_errlist.h /usr/include/string.h \
- /usr/include/xlocale.h ../filesys/openfile.h
+ /usr/include/xlocale.h ../filesys/openfile.h ../machine/disk.h
 exception.o: ../userprog/exception.cc ../threads/copyright.h \
  ../threads/system.h ../threads/copyright.h ../threads/utility.h \
  ../threads/bool.h ../machine/sysdep.h /usr/include/stdio.h \
@@ -501,7 +501,7 @@ progtest.o: ../userprog/progtest.cc ../threads/copyright.h \
  ../threads/taskManager.h ../threads/list.h ../threads/scheduler.h \
  ../machine/interrupt.h ../threads/list.h ../machine/stats.h \
  ../machine/timer.h ../machine/console.h ../userprog/addrspace.h \
- ../threads/synch.h
+ ../threads/synch.h ../filesys/synchdisk.h ../machine/disk.h
 console.o: ../machine/console.cc ../threads/copyright.h \
  ../machine/console.h ../threads/utility.h ../threads/copyright.h \
  ../threads/bool.h ../machine/sysdep.h /usr/include/stdio.h \

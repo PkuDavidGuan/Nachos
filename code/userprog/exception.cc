@@ -260,6 +260,12 @@ ExceptionHandler(ExceptionType which)
 		delete currentThread->space;
 		currentThread->Finish();
 	}
+	else if ((which == SyscallException) && (type == SC_GYS))
+	{
+		printf("lucky dog.\n");
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+	}
     else if(which == PageFaultException)      //pagefault
     {
 		unsigned int vpn;
