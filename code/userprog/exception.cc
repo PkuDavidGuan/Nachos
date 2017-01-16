@@ -454,6 +454,25 @@ ExceptionHandler(ExceptionType which)
 		
 		machine->Refresh();
 	}
+	else if ((which == SyscallException) && (type == SC_Join))
+	{
+		Thread *tmp = (Thread *)machine->ReadRegister(4);
+		int count = 0;
+		for(int i = 0; i < 10; ++i)
+		{
+			if(currentThread->childThread[i] == tmp)
+			{
+				count = i;
+				break;
+			}
+		}
+		while(currentThread->childThread[count] != NULL)
+		{
+			DEBUG('6', "thread %s have to wait.\n", currentThread->getName());
+			currentThread->Yield();
+		}
+		machine->Refresh();
+	}
     else if(which == PageFaultException)      //pagefault
     {
 		unsigned int vpn;

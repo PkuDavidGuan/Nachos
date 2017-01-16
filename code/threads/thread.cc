@@ -166,17 +166,17 @@ Thread::Finish ()
     //     if(childThread[i] != NULL)
     //         childThread[i]->Finish();
     // }
-    // if(fatherThread != NULL)
-    // {
-    //     for(int i = 0; i < 10; ++i)
-    //     {
-    //         if(fatherThread->childThread[i] == this)
-    //         {
-    //             fatherThread->childThread[i] = NULL;
-    //             break;
-    //         }
-    //     }
-    // }
+    if(fatherThread != NULL)
+    {
+        for(int i = 0; i < 10; ++i)
+        {
+            if(fatherThread->childThread[i] == this)
+            {
+                fatherThread->childThread[i] = NULL;
+                break;
+            }
+        }
+    }
     if(threadToBeDestroyed != NULL)                   //fix the delete bug
         taskmanager->deleteThread(threadToBeDestroyed);
     threadToBeDestroyed = currentThread;

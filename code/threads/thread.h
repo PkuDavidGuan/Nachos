@@ -135,7 +135,6 @@ class Thread {
     int priority;
     int usedTime;             //the time have been used
     Thread* fatherThread;
-    Thread* childThread[10];
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()
@@ -154,6 +153,7 @@ class Thread {
     void RB_Suspend();    //suspend a ready or blocked thread
 
     AddrSpace *space;			// User code this thread is running.
+    Thread* childThread[10];
 #endif
 };
 

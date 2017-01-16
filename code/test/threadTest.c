@@ -6,6 +6,8 @@
 #include "syscall.h"
 int main()
 {
-    Exec("../test/sort");
+    int tid;
+    tid = Exec("../test/sort");
+    Join(tid);
     Exit(0);
 }
