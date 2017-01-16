@@ -239,10 +239,24 @@ void LazyLoad_inverse(int vpn)
 }
 int pagefaultnum = 0;
 
-void stupidNachos(int p)
+struct spaceAndPC
 {
-	VoidNoArgFunctionPtr stupid = (VoidNoArgFunctionPtr)p;
-	stupid();
+	AddrSpace *space;
+	int pc;
+};
+void forkFunc(int p)
+{
+	printf("i am here\n");
+	spaceAndPC *tmp = (spaceAndPC *)p;
+	AddrSpace *space = new AddrSpace(tmp->space);
+	currentThread->space = space;
+
+	machine->WriteRegister(PCReg, tmp->pc);
+	machine->WriteRegister(NextPCReg,tmp->pc+4);
+
+	currentThread->SaveUserState();
+
+	machine->Run();
 }
 void
 ExceptionHandler(ExceptionType which)
@@ -265,7 +279,7 @@ ExceptionHandler(ExceptionType which)
 		printf("----------------------\n");
 		printf("\n");
 		//interrupt->Halt();
-		delete currentThread->space;
+		//delete currentThread->space;
 		currentThread->Finish();
 	}
 	else if ((which == SyscallException) && (type == SC_Create))
@@ -375,11 +389,13 @@ ExceptionHandler(ExceptionType which)
 	else if ((which == SyscallException) && (type == SC_Fork))
 	{
 		DEBUG('6',"Thread fork.\n");
-		int p1 = machine->ReadRegister(4);
+		spaceAndPC *tmp = new spaceAndPC;
+		tmp->pc = machine->ReadRegister(4);
+		tmp->space = currentThread->space;
 		Thread *t1 = taskmanager->createThread("child",3);
 		currentThread->addChild(t1);
 		t1->addFather(currentThread);
-		
+		t1->Fork(forkFunc, (int)tmp);
 		machine->Refresh();
 	}
     else if(which == PageFaultException)      //pagefault

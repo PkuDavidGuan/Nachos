@@ -155,27 +155,28 @@ Thread::CheckOverflow()
 void
 Thread::Finish ()
 {
-    (void) interrupt->SetLevel(IntOff);		
+    (void) interrupt->SetLevel(IntOff);	
+    //printf("%s, %s\n", currentThread->getName(), getName());	
     ASSERT(this == currentThread);
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
     
-    for(int i = 0; i < 10; ++i)
-    {
-        if(childThread[i] != NULL)
-            childThread[i]->Finish();
-    }
-    if(fatherThread != NULL)
-    {
-        for(int i = 0; i < 10; ++i)
-        {
-            if(father->childThread[i] == this)
-            {
-                father->childThread[i] = NULL;
-                break;
-            }
-        }
-    }
+    // for(int i = 0; i < 10; ++i)
+    // {
+    //     if(childThread[i] != NULL)
+    //         childThread[i]->Finish();
+    // }
+    // if(fatherThread != NULL)
+    // {
+    //     for(int i = 0; i < 10; ++i)
+    //     {
+    //         if(fatherThread->childThread[i] == this)
+    //         {
+    //             fatherThread->childThread[i] = NULL;
+    //             break;
+    //         }
+    //     }
+    // }
     if(threadToBeDestroyed != NULL)                   //fix the delete bug
         taskmanager->deleteThread(threadToBeDestroyed);
     threadToBeDestroyed = currentThread;

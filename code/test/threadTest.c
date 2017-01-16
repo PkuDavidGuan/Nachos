@@ -4,10 +4,15 @@
 */
 
 #include "syscall.h"
-
+void testFork()
+{
+    int a = 2;
+    a = 3+5;
+}
 int main()
 {
     GYS();
-    Yield();
+    Fork(testFork);
+    GYS();
     Exit(0);
 }
