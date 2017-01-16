@@ -107,7 +107,21 @@ class Thread {
     void addUsedTime() { usedTime++; }
     void clearUsedTime() { usedTime = 1; }
     void Print() { printf("%s       %d       %d       %s\n", name, tid, uid, getStatus()); }
-
+    void addChild(Thread *child)
+    {
+      for(int i = 0; i < 10; ++i)
+      {
+        if(childThread[i] == NULL)
+        {
+          childThread[i] = child;
+          break;
+        }
+      }
+    }
+    void addFather(Thread *father)
+    {
+      fatherThread = father;
+    }
   private:
     // some of the private data for this class is listed above
     
@@ -120,6 +134,8 @@ class Thread {
     int uid;                  //user id
     int priority;
     int usedTime;             //the time have been used
+    Thread* fatherThread;
+    Thread* childThread[10];
     void StackAllocate(VoidFunctionPtr func, int arg);
     					// Allocate a stack for thread.
 					// Used internally by Fork()

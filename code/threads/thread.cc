@@ -40,6 +40,9 @@ Thread::Thread(char* threadName, int Tid, int Uid, int pri)
     uid = Uid;
     priority = pri;
     usedTime = 1;
+    fatherThread = NULL;
+    for(int i = 0; i < 10; ++i)
+        childThread[i] = NULL;
 
     stackTop = NULL;
     stack = NULL;
@@ -157,6 +160,22 @@ Thread::Finish ()
     
     DEBUG('t', "Finishing thread \"%s\"\n", getName());
     
+    for(int i = 0; i < 10; ++i)
+    {
+        if(childThread[i] != NULL)
+            childThread[i]->Finish();
+    }
+    if(fatherThread != NULL)
+    {
+        for(int i = 0; i < 10; ++i)
+        {
+            if(father->childThread[i] == this)
+            {
+                father->childThread[i] = NULL;
+                break;
+            }
+        }
+    }
     if(threadToBeDestroyed != NULL)                   //fix the delete bug
         taskmanager->deleteThread(threadToBeDestroyed);
     threadToBeDestroyed = currentThread;

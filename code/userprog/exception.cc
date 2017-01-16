@@ -25,6 +25,8 @@
 #include "system.h"
 #include "syscall.h"
 
+typedef void (*VoidFunctionPtr)(int arg);
+typedef void (*VoidNoArgFunctionPtr)();
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -236,6 +238,12 @@ void LazyLoad_inverse(int vpn)
 		&(currentThread->space->swapFile[machine->pageTable[vpn].virtualPage * PageSize]),PageSize);
 }
 int pagefaultnum = 0;
+
+void stupidNachos(int p)
+{
+	VoidNoArgFunctionPtr stupid = (VoidNoArgFunctionPtr)p;
+	stupid();
+}
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -283,8 +291,7 @@ ExceptionHandler(ExceptionType which)
 		}
 		fileSystem->Create(buffer, 0);
 		DEBUG('6',"Create %s\n", buffer);
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
 	}
 	else if ((which == SyscallException) && (type == SC_Open))
 	{
@@ -310,8 +317,7 @@ ExceptionHandler(ExceptionType which)
 		OpenFile *fd = fileSystem->Open(buffer);
 		DEBUG('6',"Open %s, fd = %d\n", buffer, (int)fd);
 		machine->WriteRegister(2,(int)fd);
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
 	}
 	else if ((which == SyscallException) && (type == SC_Close))
 	{
@@ -319,8 +325,7 @@ ExceptionHandler(ExceptionType which)
 		
 		fileSystem->CloseDIY((OpenFile *)fd);
 		DEBUG('6',"Close %d\n", fd);
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
 	}
 	else if ((which == SyscallException) && (type == SC_Read))
 	{
@@ -334,8 +339,7 @@ ExceptionHandler(ExceptionType which)
 			machine->WriteMem(addr++, 1, buffer[i]);
 		machine->WriteRegister(2, readSize);
 
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
 		DEBUG('6',"Read %d bytes, contents are %x\n", readSize, *((int *)buffer));		
 	}
 	else if ((which == SyscallException) && (type == SC_Write))
@@ -355,14 +359,28 @@ ExceptionHandler(ExceptionType which)
 
 		fd->Write(buffer, size);
 
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
 	}
 	else if ((which == SyscallException) && (type == SC_GYS))
 	{
 		printf("lucky dog.\n");
-		int pc = machine->ReadRegister(34);
-		machine->WriteRegister(34, pc+4);
+		machine->Refresh();
+	}
+	else if ((which == SyscallException) && (type == SC_Yield))
+	{
+		DEBUG('6',"Thread yeild.\n");
+		machine->Refresh();
+		currentThread->Yield();
+	}
+	else if ((which == SyscallException) && (type == SC_Fork))
+	{
+		DEBUG('6',"Thread fork.\n");
+		int p1 = machine->ReadRegister(4);
+		Thread *t1 = taskmanager->createThread("child",3);
+		currentThread->addChild(t1);
+		t1->addFather(currentThread);
+		
+		machine->Refresh();
 	}
     else if(which == PageFaultException)      //pagefault
     {
