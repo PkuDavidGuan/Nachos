@@ -258,6 +258,30 @@ void forkFunc(int p)
 
 	machine->Run();
 }
+void execFunc(int p)
+{
+	char *name = (char *)p;
+
+	OpenFile *executable = fileSystem->Open(name);
+    AddrSpace *space;
+
+    if (executable == NULL) {
+	printf("Unable to open file %s\n", name);
+	return;
+    }
+    space = new AddrSpace(executable);    
+    currentThread->space = space;
+
+    delete executable;			// close file
+
+    space->InitRegisters();		// set the initial register values
+    space->RestoreState();		// load page table register
+
+    machine->Run();			// jump to the user progam
+    ASSERT(FALSE);			// machine->Run never returns;
+					// the address space exits
+					// by doing the syscall "exit"
+}
 void
 ExceptionHandler(ExceptionType which)
 {
@@ -310,7 +334,7 @@ ExceptionHandler(ExceptionType which)
 	else if ((which == SyscallException) && (type == SC_Open))
 	{
 		int addr = machine->ReadRegister(4);
-		char buffer[10];
+		char buffer[20];
 		int len = 0;
 		int tmp;
 		while(true)
@@ -396,6 +420,38 @@ ExceptionHandler(ExceptionType which)
 		currentThread->addChild(t1);
 		t1->addFather(currentThread);
 		t1->Fork(forkFunc, (int)tmp);
+		machine->Refresh();
+	}
+	else if ((which == SyscallException) && (type == SC_Exec))
+	{
+		DEBUG('6', "Thread exec.\n");
+		int addr = machine->ReadRegister(4);
+		char *buffer = new char[20];
+		int len = 0;
+		int tmp;
+		while(true)
+		{
+			machine->ReadMem(addr++, 1, &tmp);
+			if(tmp != 0)
+			{
+				if(tmp == 43 || tmp < 0)
+					tmp = 46;
+				buffer[len++] = tmp;
+			}
+			else
+			{
+				buffer[len] = 0;
+				break;
+			}
+		}
+
+		Thread *t1 = taskmanager->createThread("childExec",3);
+		currentThread->addChild(t1);
+		t1->addFather(currentThread);
+		machine->WriteRegister(2, (int)t1);
+
+		t1->Fork(execFunc, (int)buffer);
+		
 		machine->Refresh();
 	}
     else if(which == PageFaultException)      //pagefault
