@@ -260,6 +260,104 @@ ExceptionHandler(ExceptionType which)
 		delete currentThread->space;
 		currentThread->Finish();
 	}
+	else if ((which == SyscallException) && (type == SC_Create))
+	{
+		int addr = machine->ReadRegister(4);
+		char buffer[50];
+		int len = 0;
+		int tmp;
+		while(true)
+		{
+			machine->ReadMem(addr++, 1, &tmp);
+			if(tmp != 0)
+			{
+				if(tmp == 43 || tmp < 0)
+					tmp = 46;
+				buffer[len++] = tmp;
+			}
+			else
+			{
+				buffer[len] = 0;
+				break;
+			}
+		}
+		fileSystem->Create(buffer, 0);
+		DEBUG('6',"Create %s\n", buffer);
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+	}
+	else if ((which == SyscallException) && (type == SC_Open))
+	{
+		int addr = machine->ReadRegister(4);
+		char buffer[10];
+		int len = 0;
+		int tmp;
+		while(true)
+		{
+			machine->ReadMem(addr++, 1, &tmp);
+			if(tmp != 0)
+			{
+				if(tmp == 43 || tmp < 0)
+					tmp = 46;
+				buffer[len++] = tmp;
+			}
+			else
+			{
+				buffer[len] = 0;
+				break;
+			}
+		}
+		OpenFile *fd = fileSystem->Open(buffer);
+		DEBUG('6',"Open %s, fd = %d\n", buffer, (int)fd);
+		machine->WriteRegister(2,(int)fd);
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+	}
+	else if ((which == SyscallException) && (type == SC_Close))
+	{
+		int fd = machine->ReadRegister(4);
+		
+		fileSystem->CloseDIY((OpenFile *)fd);
+		DEBUG('6',"Close %d\n", fd);
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+	}
+	else if ((which == SyscallException) && (type == SC_Read))
+	{
+		int addr = machine->ReadRegister(4);
+		int size = machine->ReadRegister(5);
+		OpenFile *fd = (OpenFile *)(machine->ReadRegister(6));
+		
+		char buffer[20];
+		int readSize = fd->Read(buffer, size);
+		for(int i = 0; i < readSize; ++i)
+			machine->WriteMem(addr++, 1, buffer[i]);
+		machine->WriteRegister(2, readSize);
+
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+		DEBUG('6',"Read %d bytes, contents are %x\n", readSize, *((int *)buffer));		
+	}
+	else if ((which == SyscallException) && (type == SC_Write))
+	{
+		int addr = machine->ReadRegister(4);
+		int size = machine->ReadRegister(5);
+		OpenFile *fd = (OpenFile *)(machine->ReadRegister(6));
+		
+		int tmp;
+		char buffer[20];
+		for(int i = 0; i < size; ++i)
+		{
+			machine->ReadMem(addr++, 1, &tmp);
+			buffer[i] = tmp;
+		}
+		DEBUG('6',"Write, contents are %x, size is %d\n", *((int *)buffer), size);
+
+		fd->Write(buffer, size);
+
+		int pc = machine->ReadRegister(34);
+		machine->WriteRegister(34, pc+4);
+	}
 	else if ((which == SyscallException) && (type == SC_GYS))
 	{
 		printf("lucky dog.\n");

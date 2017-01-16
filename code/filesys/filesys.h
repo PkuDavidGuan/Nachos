@@ -46,6 +46,7 @@ class FileSystem {
     FileSystem(bool format) {}
 
     bool Create(char *name, int initialSize) { 
+	printf("create name %s\n", name);
 	int fileDescriptor = OpenForWrite(name);
 
 	if (fileDescriptor == -1) return FALSE;
@@ -59,6 +60,11 @@ class FileSystem {
 	  if (fileDescriptor == -1) return NULL;
 	  return new OpenFile(fileDescriptor);
       }
+	void CloseDIY(OpenFile *fd)
+	{
+		if(fd != NULL)
+			delete fd;
+	}  
 
     bool Remove(char *name) { return Unlink(name) == 0; }
 

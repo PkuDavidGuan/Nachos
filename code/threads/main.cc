@@ -94,6 +94,7 @@ main(int argc, char **argv)
     (void) Initialize(argc, argv);
 
     //printhello();
+//the following is for thread lab, but there are some collisions with the filesystem test. 	
 // #ifdef THREADS
 //     for (argc--, argv++; argc > 0; argc -= argCount, argv += argCount) {
 //       argCount = 1;
@@ -119,13 +120,13 @@ main(int argc, char **argv)
         if (!strcmp(*argv, "-x")) {        	// run a user program
 	    ASSERT(argc > 1);
 			
-			charToInt abc;
-			abc.tmpchar = *(argv+1);
-			Thread *t1 = taskmanager->createThread("user1",1);
-			Thread *t2 = taskmanager->createThread("user2",1);
-    		t1->Fork(DummyStartProcess, abc.tmpint);
-			t2->Fork(DummyStartProcess, abc.tmpint);
-			//StartProcess(*(argv + 1));
+			// charToInt abc;
+			// abc.tmpchar = *(argv+1);
+			// Thread *t1 = taskmanager->createThread("user1",1);
+			// Thread *t2 = taskmanager->createThread("user2",1);
+    		// t1->Fork(DummyStartProcess, abc.tmpint);
+			// t2->Fork(DummyStartProcess, abc.tmpint);
+			StartProcess(*(argv + 1));
             argCount = 2;
         } else if (!strcmp(*argv, "-c")) {      // test the console
 	    if (argc == 1)

@@ -33,6 +33,8 @@ extern taskManager *taskmanager;
 
 #ifdef USER_PROGRAM
 #include "machine.h"
+#include "synchdisk.h"
+extern SynchDisk   *synchDisk;
 extern Machine* machine;	// user program memory and registers
 extern TLBcount *tlbcounter;
 extern BitMap* mymap;
